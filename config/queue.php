@@ -40,7 +40,9 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Must stay above the longest job timeout (GenerateVideo: 600s)
+            // or the worker re-dispatches renders while they are running.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 630),
             'after_commit' => false,
         ],
 

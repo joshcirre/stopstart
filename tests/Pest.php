@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -44,7 +45,7 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function ownerToken(): string
 {
-    // ..
+    return (string) Str::uuid7();
 }
