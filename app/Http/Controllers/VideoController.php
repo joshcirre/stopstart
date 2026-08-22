@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Enums\VideoStatus;
 use App\Events\VideoStatusUpdated;
 use App\Http\Controllers\Concerns\AuthorizesOwner;
+use App\Http\Requests\StoreRenderedVideoRequest;
 use App\Jobs\GenerateVideo;
 use App\Models\Project;
 use App\Models\Video;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -42,6 +44,41 @@ class VideoController extends Controller
         GenerateVideo::dispatch($video);
 
         return back();
+    }
+
+    /**
+     * Stores a video rendered client-side (mediabunny/WebCodecs in the
+     * browser). The server-side ffmpeg queue render remains available as
+     * the fallback for browsers without WebCodecs support.
+     */
+    public function upload(StoreRenderedVideoRequest $request, Project $project): JsonResponse
+    {
+        $this->authorizeOwner($request, $project);
+
+        $path = $request->file('video')->storeAs(
+            "{$project->storageDirectory()}/videos",
+            Str::uuid7().'.mp4'
+        );
+
+        abort_if($path === false, 500, 'Unable to store the rendered video.');
+
+        $video = $project->videos()->create([
+            'status' => VideoStatus::Completed,
+            'fps' => $project->fps,
+            'path' => $path,
+        ]);
+
+        broadcast(new VideoStatusUpdated($video));
+
+        return response()->json([
+            'video' => [
+                'id' => $video->id,
+                'status' => $video->status->value,
+                'url' => $video->url(),
+                'downloadUrl' => route('videos.download', $video),
+                'error' => null,
+            ],
+        ], 201);
     }
 
     /**

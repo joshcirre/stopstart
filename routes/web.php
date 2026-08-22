@@ -19,6 +19,7 @@ Route::post('/projects/{project}/frames', [FrameController::class, 'store'])->na
 Route::delete('/projects/{project}/frames/{frame}', [FrameController::class, 'destroy'])->name('projects.frames.destroy');
 
 Route::post('/projects/{project}/videos', [VideoController::class, 'store'])->name('projects.videos.store');
+Route::post('/projects/{project}/videos/upload', [VideoController::class, 'upload'])->name('projects.videos.upload');
 Route::get('/videos/{video}/download', [VideoController::class, 'download'])->name('videos.download');
 
 Route::get('/remote/{project:remote_token}', [RemoteController::class, 'show'])->name('remote.show');

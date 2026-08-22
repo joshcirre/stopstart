@@ -6,6 +6,7 @@ use App\Jobs\GenerateVideo;
 use App\Models\Frame;
 use App\Models\Project;
 use App\Models\Video;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Support\Facades\Bus;
@@ -147,6 +148,48 @@ it('marks the video failed when ffmpeg errors', function () {
 
     expect($video->status)->toBe(VideoStatus::Failed)
         ->and($video->error)->toContain('encoder exploded');
+});
+
+it('stores a client-rendered video upload as completed', function () {
+    Storage::fake();
+    Event::fake([VideoStatusUpdated::class]);
+
+    $project = Project::factory()->create(['fps' => 24]);
+
+    $response = $this->withCookie('owner_token', $project->owner_token)
+        ->post(route('projects.videos.upload', $project), [
+            'video' => UploadedFile::fake()->create('render.mp4', 512, 'video/mp4'),
+        ]);
+
+    $response->assertCreated()->assertJsonPath('video.status', 'completed');
+
+    $video = Video::sole();
+
+    expect($video->status)->toBe(VideoStatus::Completed)
+        ->and($video->fps)->toBe(24)
+        ->and($video->path)->not->toBeNull();
+
+    Storage::assertExists($video->path);
+    Event::assertDispatched(VideoStatusUpdated::class);
+});
+
+it('rejects invalid client-rendered uploads', function () {
+    Storage::fake();
+
+    $project = Project::factory()->create();
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->postJson(route('projects.videos.upload', $project), [
+            'video' => UploadedFile::fake()->create('render.txt', 10, 'text/plain'),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('video');
+
+    $this->withCookie('owner_token', ownerToken())
+        ->postJson(route('projects.videos.upload', $project), [
+            'video' => UploadedFile::fake()->create('render.mp4', 512, 'video/mp4'),
+        ])
+        ->assertNotFound();
 });
 
 it('downloads a completed video for its owner', function () {
