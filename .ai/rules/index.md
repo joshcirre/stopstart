@@ -4,5 +4,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
+| app/Http/Controllers/VideoController.php | .ai/rules/controllers.md |
 | app/Events/** | .ai/rules/events.md |
 | app/Jobs/** | .ai/rules/jobs.md |
