@@ -7,6 +7,7 @@ use App\Models\Frame;
 use App\Models\Project;
 use App\Models\Video;
 use Illuminate\Process\PendingProcess;
+use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Process;
@@ -40,6 +41,28 @@ it('rejects a render without frames', function () {
         ->assertSessionHasErrors('frames');
 
     Bus::assertNotDispatched(GenerateVideo::class);
+});
+
+it('fails stale renders and allows a new one', function () {
+    Bus::fake([GenerateVideo::class]);
+    Event::fake([VideoStatusUpdated::class]);
+
+    $project = Project::factory()->create();
+    Frame::factory()->for($project)->create();
+
+    $stale = Video::factory()->for($project)->processing()->create();
+    Video::query()->whereKey($stale->id)->update(['updated_at' => now()->subMinutes(20)]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->post(route('projects.videos.store', $project))
+        ->assertRedirect()
+        ->assertSessionDoesntHaveErrors();
+
+    expect($stale->refresh()->status)->toBe(VideoStatus::Failed)
+        ->and($stale->error)->toContain('interrupted');
+
+    Event::assertDispatched(VideoStatusUpdated::class);
+    Bus::assertDispatched(GenerateVideo::class);
 });
 
 it('rejects a render while another is in flight', function () {
@@ -92,6 +115,19 @@ it('renders frames into a stored video', function (callable $projectFactory, str
     'landscape' => [fn () => Project::factory()->create(), 'scale=1920:1080'],
     'portrait' => [fn () => Project::factory()->portrait()->create(), 'scale=1080:1920'],
 ]);
+
+it('explains max-attempts failures in plain language', function () {
+    Event::fake([VideoStatusUpdated::class]);
+
+    $video = Video::factory()->processing()->create();
+
+    (new GenerateVideo($video))->failed(
+        new MaxAttemptsExceededException('App\Jobs\GenerateVideo has been attempted too many times.')
+    );
+
+    expect($video->refresh()->status)->toBe(VideoStatus::Failed)
+        ->and($video->error)->toContain('ran out of memory');
+});
 
 it('marks the video failed when ffmpeg errors', function () {
     Storage::fake();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\VideoStatus;
+use App\Events\VideoStatusUpdated;
 use App\Http\Controllers\Concerns\AuthorizesOwner;
 use App\Jobs\GenerateVideo;
 use App\Models\Project;
@@ -28,6 +29,8 @@ class VideoController extends Controller
             ]);
         }
 
+        $this->failStaleRenders($project);
+
         if ($project->videos()->whereIn('status', [VideoStatus::Pending, VideoStatus::Processing])->exists()) {
             throw ValidationException::withMessages([
                 'video' => 'A render is already in progress for this project.',
@@ -39,6 +42,27 @@ class VideoController extends Controller
         GenerateVideo::dispatch($video);
 
         return back();
+    }
+
+    /**
+     * A render whose row hasn't been touched for far longer than the job
+     * timeout was killed without running failed() (e.g. an OOM-killed
+     * worker). Fail it here so it stops blocking new renders.
+     */
+    private function failStaleRenders(Project $project): void
+    {
+        $project->videos()
+            ->whereIn('status', [VideoStatus::Pending, VideoStatus::Processing])
+            ->where('updated_at', '<', now()->subMinutes(15))
+            ->get()
+            ->each(function (Video $video) {
+                $video->update([
+                    'status' => VideoStatus::Failed,
+                    'error' => 'The render was interrupted before it could finish — the worker likely ran out of memory. Try rendering again.',
+                ]);
+
+                broadcast(new VideoStatusUpdated($video));
+            });
     }
 
     public function download(Request $request, Video $video): StreamedResponse

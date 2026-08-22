@@ -8,6 +8,7 @@ use App\Models\Video;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\File as HttpFile;
+use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
@@ -51,9 +52,19 @@ class GenerateVideo implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
+        $message = $exception?->getMessage() ?? 'Unknown error';
+
+        // "Attempted too many times" means a previous attempt was killed
+        // without running this handler (usually the worker being OOM-killed
+        // mid-encode) and the queue redelivered the job.
+        if ($exception instanceof MaxAttemptsExceededException) {
+            $message = 'The render was interrupted before it could finish — '
+                .'the worker likely ran out of memory. Try rendering again.';
+        }
+
         $this->video->update([
             'status' => VideoStatus::Failed,
-            'error' => Str::limit($exception?->getMessage() ?? 'Unknown error', 2000),
+            'error' => Str::limit($message, 2000),
         ]);
 
         broadcast(new VideoStatusUpdated($this->video));
@@ -85,6 +96,9 @@ class GenerateVideo implements ShouldQueue
         $orientation = $this->video->project->orientation;
         $outputPath = $directory.'/output.mp4';
 
+        // The thread and lookahead caps keep x264's memory flat regardless of
+        // frame count: with defaults, the encoder buffers up to ~40 input
+        // frames (~3MB each at 1080p), which OOM-kills small queue workers.
         $result = Process::path($directory)->timeout(300)->run([
             config()->string('stopstart.ffmpeg_path'),
             '-y',
@@ -92,6 +106,9 @@ class GenerateVideo implements ShouldQueue
             '-i', 'frame_%06d.jpg',
             '-vf', sprintf('scale=%d:%d', $orientation->width(), $orientation->height()),
             '-c:v', 'libx264',
+            '-preset', 'veryfast',
+            '-threads', '2',
+            '-x264-params', 'ref=1:rc-lookahead=8',
             '-pix_fmt', 'yuv420p',
             '-movflags', '+faststart',
             '-r', (string) $this->video->fps,
