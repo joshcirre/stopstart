@@ -28,6 +28,8 @@ export interface Frame {
     id: number;
     sequence: number;
     thumbnailUrl: string;
+    /** Same-origin stream of the frame, fetchable without bucket CORS. */
+    imageUrl?: string;
 }
 
 export interface Video {

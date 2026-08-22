@@ -65,6 +65,7 @@ class ProjectController extends Controller
                     'id' => $frame->id,
                     'sequence' => $frame->sequence,
                     'thumbnailUrl' => $frame->thumbnailUrl(),
+                    'imageUrl' => route('projects.frames.image', [$project, $frame]),
                 ]),
             'frameCount' => $project->frames()->count(),
             'video' => $this->videoProps($project->latestVideo),

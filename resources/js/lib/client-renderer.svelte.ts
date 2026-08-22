@@ -85,7 +85,7 @@ export class ClientRenderer {
         const blobs: Blob[] = [];
 
         for (const [index, frame] of frames.entries()) {
-            const response = await fetch(frame.thumbnailUrl);
+            const response = await fetch(frame.imageUrl ?? frame.thumbnailUrl);
 
             if (!response.ok) {
                 throw new Error(`Downloading frame ${frame.sequence} failed.`);

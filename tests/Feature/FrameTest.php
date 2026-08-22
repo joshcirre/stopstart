@@ -84,6 +84,21 @@ it('deletes a frame and leaves sequence gaps intact', function () {
     expect($project->frames()->orderBy('sequence')->pluck('sequence')->all())->toBe([1, 3]);
 });
 
+it('streams a frame image to its owner', function () {
+    $project = Project::factory()->create();
+    $path = "projects/{$project->id}/frames/a.jpg";
+    Storage::put($path, 'jpg-bytes');
+    $frame = Frame::factory()->for($project)->create(['path' => $path]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->get(route('projects.frames.image', [$project, $frame]))
+        ->assertSuccessful();
+
+    $this->withCookie('owner_token', ownerToken())
+        ->get(route('projects.frames.image', [$project, $frame]))
+        ->assertNotFound();
+});
+
 it('cannot delete a frame through a different project', function () {
     $frame = Frame::factory()->create();
     $otherProject = Project::factory()->create(['owner_token' => $frame->project->owner_token]);

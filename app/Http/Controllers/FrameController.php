@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FrameController extends Controller
 {
@@ -47,6 +48,20 @@ class FrameController extends Controller
             ],
             'frameCount' => $project->frames()->count(),
         ], 201);
+    }
+
+    /**
+     * Streams the frame through the app so the browser-side renderer can
+     * fetch() it: the bucket's signed URLs live on another origin and send
+     * no CORS headers, which blocks fetch (but not <img> display).
+     */
+    public function image(Request $request, Project $project, Frame $frame): StreamedResponse
+    {
+        $this->authorizeOwner($request, $project);
+
+        abort_unless($frame->project_id === $project->id, 404);
+
+        return Storage::response($frame->path);
     }
 
     public function destroy(Request $request, Project $project, Frame $frame): RedirectResponse
