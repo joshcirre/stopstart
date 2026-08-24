@@ -17,6 +17,11 @@ export class Camera {
 
     errorMessage = $state<string | null>(null);
 
+    /** Optical/digital zoom bounds when the camera supports zooming. */
+    zoomRange = $state<{ min: number; max: number; step: number } | null>(null);
+
+    zoom = $state(1);
+
     stream: MediaStream | null = null;
 
     #canvas: HTMLCanvasElement | null = null;
@@ -66,6 +71,8 @@ export class Camera {
             this.errorMessage = 'The camera stopped unexpectedly.';
         });
 
+        this.#readZoomCapability(track);
+
         this.devices = (await navigator.mediaDevices.enumerateDevices()).filter(
             (device) => device.kind === 'videoinput',
         );
@@ -75,6 +82,45 @@ export class Camera {
 
     async switchTo(deviceId: string): Promise<void> {
         await this.start(deviceId);
+    }
+
+    async setZoom(value: number): Promise<void> {
+        const track = this.stream?.getVideoTracks()[0];
+
+        if (!track || !this.zoomRange) {
+            return;
+        }
+
+        this.zoom = value;
+
+        try {
+            // Zoom constraints are not in the standard TS lib yet.
+            await track.applyConstraints({
+                advanced: [{ zoom: value } as MediaTrackConstraintSet],
+            });
+        } catch {
+            // Some devices reject mid-stream zoom; the slider stays cosmetic.
+        }
+    }
+
+    #readZoomCapability(track: MediaStreamTrack): void {
+        const capabilities = track.getCapabilities?.() as
+            | (MediaTrackCapabilities & {
+                  zoom?: { min: number; max: number; step: number };
+              })
+            | undefined;
+
+        if (
+            capabilities?.zoom &&
+            capabilities.zoom.max > capabilities.zoom.min
+        ) {
+            this.zoomRange = capabilities.zoom;
+            this.zoom =
+                (track.getSettings() as MediaTrackSettings & { zoom?: number })
+                    .zoom ?? capabilities.zoom.min;
+        } else {
+            this.zoomRange = null;
+        }
     }
 
     stop(resetStatus = true): void {

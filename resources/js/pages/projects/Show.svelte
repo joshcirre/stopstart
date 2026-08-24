@@ -24,17 +24,18 @@
         monoMeta,
         railAccent,
         railCard,
+        select,
     } from '@/lib/styles';
     import { toast } from '@/lib/toast.svelte';
     import { cn } from '@/lib/utils';
-    import { capture } from '@/routes/projects';
+    import { capture, update as updateProject } from '@/routes/projects';
     import { destroy as destroyFrame } from '@/routes/projects/frames';
     import {
         store as storeVideo,
         upload as uploadVideo,
     } from '@/routes/projects/videos';
     import type { Frame, ProjectShowProps } from '@/types';
-    import { ORIENTATION_DIMENSIONS } from '@/types';
+    import { FPS_CHOICES, ORIENTATION_DIMENSIONS } from '@/types';
 
     let {
         project,
@@ -127,6 +128,16 @@
         }),
     );
 
+    function changeFps(event: Event): void {
+        const fps = Number((event.currentTarget as HTMLSelectElement).value);
+
+        router.patch(
+            updateProject(project.id),
+            { fps },
+            { preserveScroll: true },
+        );
+    }
+
     function deleteFrame(frame: Frame): void {
         if (confirm(`Delete frame ${frame.sequence}?`)) {
             router.delete(destroyFrame([project.id, frame.id]), {
@@ -154,7 +165,22 @@
 
     <section class={cn(railCard, railAccent.amber)}>
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class={microLabel}>VIDEO</h2>
+            <div class="flex items-center gap-4">
+                <h2 class={microLabel}>VIDEO</h2>
+                <label class="flex items-center gap-2">
+                    <span class={microLabel}>FPS</span>
+                    <select
+                        value={project.fps}
+                        disabled={renderer.busy || videoInFlight}
+                        onchange={changeFps}
+                        class={cn(select, 'px-2 py-1 text-xs')}
+                    >
+                        {#each FPS_CHOICES as fps (fps)}
+                            <option value={fps}>{fps}</option>
+                        {/each}
+                    </select>
+                </label>
+            </div>
 
             {#if clientRenderSupported}
                 <div class="flex flex-col items-end gap-1.5">

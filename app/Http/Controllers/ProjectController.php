@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesOwner;
 use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Project;
 use App\Models\Video;
 use App\Support\OwnerToken;
@@ -73,6 +74,19 @@ class ProjectController extends Controller
             'layerCount' => $project->audioLayers()->count(),
             'dubUrl' => route('remote.dub', $project),
         ]);
+    }
+
+    /**
+     * Frames are rate-independent, so changing fps simply changes the
+     * playback speed of the next render or export.
+     */
+    public function update(UpdateProjectRequest $request, Project $project): RedirectResponse
+    {
+        $this->authorizeOwner($request, $project);
+
+        $project->update($request->validated());
+
+        return back();
     }
 
     public function destroy(Request $request, Project $project): RedirectResponse

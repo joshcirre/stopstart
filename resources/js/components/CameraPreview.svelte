@@ -31,7 +31,9 @@
 
 <div
     class={cn(
-        'relative max-h-full max-w-full overflow-hidden bg-zinc-900',
+        // Width-driven in portrait/column layouts, height-driven when the
+        // phone is held sideways — the aspect ratio fills in the free axis.
+        'relative w-full max-h-full max-w-full overflow-hidden bg-zinc-900 phone-landscape:h-full phone-landscape:w-auto',
         aspectClass,
     )}
 >

@@ -197,9 +197,11 @@
 <AppHead title={`Capture – ${project.name}`} />
 
 <div
-    class="dark flex h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100"
+    class="dark flex h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100 phone-landscape:flex-row phone-landscape:pt-0 phone-landscape:pb-0 phone-landscape:pl-[env(safe-area-inset-left)] phone-landscape:pr-[env(safe-area-inset-right)]"
 >
-    <header class="flex items-center justify-between gap-3 px-4 py-3">
+    <header
+        class="flex items-center justify-between gap-3 px-4 py-3 phone-landscape:absolute phone-landscape:inset-x-0 phone-landscape:top-0 phone-landscape:z-10 phone-landscape:bg-zinc-950/60 phone-landscape:py-1.5"
+    >
         <Link
             href={show(project.id)}
             class="font-mono text-xs text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
@@ -250,7 +252,9 @@
         </div>
     {/if}
 
-    <main class="grid min-h-0 flex-1 place-items-center px-4">
+    <main
+        class="grid min-h-0 flex-1 place-items-center px-4 phone-landscape:min-w-0 phone-landscape:px-0"
+    >
         <CameraPreview
             {camera}
             bind:videoElement
@@ -268,7 +272,7 @@
     </main>
 
     {#if camera.devices.length > 1}
-        <div class="flex justify-center px-4 pt-2">
+        <div class="flex justify-center px-4 pt-2 phone-landscape:hidden">
             <select
                 class="border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-300"
                 value={camera.activeDeviceId}
@@ -284,9 +288,13 @@
         </div>
     {/if}
 
-    <footer class="space-y-1 px-4 pt-3 pb-2">
-        <div class="flex items-center justify-between gap-4">
-            <div class="flex w-40 flex-col gap-1">
+    <footer
+        class="space-y-1 px-4 pt-3 pb-2 phone-landscape:flex phone-landscape:w-48 phone-landscape:shrink-0 phone-landscape:flex-col phone-landscape:justify-center phone-landscape:space-y-4 phone-landscape:overflow-y-auto phone-landscape:px-3 phone-landscape:py-2"
+    >
+        <div
+            class="flex items-center justify-between gap-4 phone-landscape:flex-col phone-landscape:justify-center phone-landscape:gap-5"
+        >
+            <div class="flex w-40 flex-col gap-1 phone-landscape:items-center">
                 <label
                     class="flex items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-400"
                 >
@@ -306,6 +314,25 @@
                     disabled={!onionSkinEnabled}
                     class="accent-white disabled:opacity-30"
                 />
+                {#if camera.zoomRange}
+                    <label
+                        class="mt-1 flex w-full items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-400"
+                    >
+                        ZOOM
+                        <input
+                            type="range"
+                            min={camera.zoomRange.min}
+                            max={camera.zoomRange.max}
+                            step={camera.zoomRange.step}
+                            value={camera.zoom}
+                            oninput={(event) =>
+                                void camera.setZoom(
+                                    Number(event.currentTarget.value),
+                                )}
+                            class="flex-1 accent-white"
+                        />
+                    </label>
+                {/if}
             </div>
 
             <ShutterButton
@@ -313,7 +340,9 @@
                 disabled={camera.status !== 'active'}
             />
 
-            <div class="flex w-40 flex-col items-end gap-1.5">
+            <div
+                class="flex w-40 flex-col items-end gap-1.5 phone-landscape:items-center"
+            >
                 <select
                     bind:value={timer.intervalSeconds}
                     disabled={timer.running}
@@ -344,7 +373,9 @@
             </p>
         {/if}
 
-        <FrameStrip frames={strip} {aspectClass} />
+        <div class="phone-landscape:hidden">
+            <FrameStrip frames={strip} {aspectClass} />
+        </div>
     </footer>
 
     <Toaster />

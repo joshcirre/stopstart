@@ -69,6 +69,30 @@ it('blocks access to another owner\'s project', function (string $routeName, str
     'destroy' => ['projects.destroy', 'delete'],
 ]);
 
+it('updates the project fps for later renders', function () {
+    $project = Project::factory()->create(['fps' => 12]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->patch(route('projects.update', $project), ['fps' => 6])
+        ->assertRedirect();
+
+    expect($project->refresh()->fps)->toBe(6);
+});
+
+it('validates and guards fps updates', function () {
+    $project = Project::factory()->create(['fps' => 12]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->patch(route('projects.update', $project), ['fps' => 61])
+        ->assertSessionHasErrors('fps');
+
+    $this->withCookie('owner_token', ownerToken())
+        ->patch(route('projects.update', $project), ['fps' => 6])
+        ->assertNotFound();
+
+    expect($project->refresh()->fps)->toBe(12);
+});
+
 it('deletes a project along with its stored files', function () {
     Storage::fake();
 
