@@ -41,7 +41,7 @@
         />
     </svg>
     <span
-        class="absolute inset-0 grid place-items-center text-xl font-semibold tabular-nums"
+        class="absolute inset-0 grid place-items-center font-mono text-xl font-semibold tabular-nums"
     >
         {seconds}
     </span>

@@ -12,17 +12,19 @@
     } = $props();
 
     const tones = {
-        neutral: 'bg-neutral-200 text-neutral-700',
-        info: 'bg-sky-100 text-sky-700',
-        success: 'bg-emerald-100 text-emerald-700',
-        danger: 'bg-red-100 text-red-700',
-        warning: 'bg-amber-100 text-amber-700',
+        neutral:
+            'border-zinc-300 text-zinc-500 dark:border-zinc-600 dark:text-zinc-400',
+        info: 'border-blue-500 text-blue-600 dark:text-blue-400',
+        success: 'border-emerald-500 text-emerald-600 dark:text-emerald-400',
+        danger: 'border-red-500 text-red-600 dark:text-red-400',
+        warning: 'border-amber-400 text-amber-600 dark:text-amber-400',
     };
 </script>
 
+<!-- `uppercase` is used here (not literal caps) because labels are dynamic data. -->
 <span
     class={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center border px-1.5 py-0.5 font-mono text-[10px] tracking-[0.15em] uppercase',
         tones[tone],
         pulse && 'animate-pulse',
     )}

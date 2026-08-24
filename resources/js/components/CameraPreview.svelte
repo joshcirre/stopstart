@@ -1,6 +1,7 @@
 <script lang="ts">
     import CountdownRing from '@/components/CountdownRing.svelte';
     import type { Camera } from '@/lib/camera.svelte';
+    import { emptyState } from '@/lib/styles';
     import { cn } from '@/lib/utils';
 
     let {
@@ -30,7 +31,7 @@
 
 <div
     class={cn(
-        'relative max-h-full max-w-full overflow-hidden rounded-xl bg-neutral-900',
+        'relative max-h-full max-w-full overflow-hidden bg-zinc-900',
         aspectClass,
     )}
 >
@@ -72,10 +73,10 @@
 
     {#if camera.status !== 'active'}
         <div
-            class="absolute inset-0 grid place-items-center bg-neutral-950/90 p-6 text-center text-neutral-200"
+            class="absolute inset-0 grid place-items-center bg-zinc-950/90 p-6 text-center text-zinc-300"
         >
             {#if camera.status === 'starting' || camera.status === 'idle'}
-                <p class="animate-pulse text-sm">Starting camera…</p>
+                <p class={cn(emptyState, 'animate-pulse')}>STARTING CAMERA</p>
             {:else if camera.status === 'denied'}
                 <div class="space-y-3">
                     <p class="text-sm">
@@ -84,7 +85,7 @@
                     </p>
                     <button
                         type="button"
-                        class="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-neutral-900"
+                        class="bg-white px-4 py-1.5 text-sm font-medium text-zinc-900"
                         onclick={() => void camera.start()}
                     >
                         Retry
@@ -98,7 +99,7 @@
                     {#if camera.status === 'error'}
                         <button
                             type="button"
-                            class="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-neutral-900"
+                            class="bg-white px-4 py-1.5 text-sm font-medium text-zinc-900"
                             onclick={() => void camera.start()}
                         >
                             Retry

@@ -12,6 +12,18 @@
         supportsClientRendering,
     } from '@/lib/client-renderer.svelte';
     import { subscribeToProjectChannel } from '@/lib/echo.svelte';
+    import {
+        btnPrimary,
+        displayHeading,
+        emptyState,
+        hairlineFill,
+        hairlineTrack,
+        headerRail,
+        microLabel,
+        monoMeta,
+        railAccent,
+        railCard,
+    } from '@/lib/styles';
     import { toast } from '@/lib/toast.svelte';
     import { cn } from '@/lib/utils';
     import { capture } from '@/routes/projects';
@@ -68,10 +80,15 @@
     }
 
     const renderPhaseLabels = {
-        fetching: 'Downloading frames…',
-        encoding: 'Encoding…',
-        uploading: 'Uploading…',
+        fetching: 'DOWNLOADING FRAMES',
+        encoding: 'ENCODING',
+        uploading: 'UPLOADING',
     } as const;
+
+    const renderPhaseLabel = $derived(
+        renderPhaseLabels[renderer.phase as keyof typeof renderPhaseLabels] ??
+            'RENDERING',
+    );
 
     let reloadTimeout: ReturnType<typeof setTimeout> | null = null;
     let lastReloadAt = 0;
@@ -110,60 +127,46 @@
 
 <AppHead title={project.name} />
 
-<div class="space-y-8">
-    <div class="flex flex-wrap items-center justify-between gap-4">
-        <div>
-            <h1 class="text-xl font-semibold">{project.name}</h1>
-            <div class="mt-1 flex items-center gap-1.5">
-                <StatusBadge
-                    label={project.orientation === 'landscape'
-                        ? 'Landscape 1920×1080'
-                        : 'Portrait 1080×1920'}
-                />
-                <StatusBadge label={`${project.fps} fps`} />
-                <span class="text-sm text-neutral-500 tabular-nums">
-                    {frameCount}
-                    {frameCount === 1 ? 'frame' : 'frames'}
-                </span>
-            </div>
+<div class="space-y-8 sm:space-y-10">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class={cn(headerRail, 'min-w-0')}>
+            <p class={cn(microLabel, 'mb-2')}>PROJECT</p>
+            <h1 class={cn(displayHeading, 'truncate')}>{project.name}</h1>
+            <p class={cn(monoMeta, 'mt-2')}>
+                {dimensions.width}×{dimensions.height} · {project.fps} FPS · {frameCount}
+                {frameCount === 1 ? 'FRAME' : 'FRAMES'}
+            </p>
         </div>
 
-        <Link
-            href={capture(project.id)}
-            class="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
-        >
-            Open capture
-        </Link>
+        <Link href={capture(project.id)} class={btnPrimary}>Open capture</Link>
     </div>
 
-    <section class="rounded-xl border border-neutral-200 bg-white p-5">
+    <section class={cn(railCard, railAccent.amber)}>
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base font-semibold">Video</h2>
+            <h2 class={microLabel}>VIDEO</h2>
 
             {#if clientRenderSupported}
-                <div class="flex flex-col items-end gap-1">
+                <div class="flex flex-col items-end gap-1.5">
                     <button
                         type="button"
                         disabled={renderer.busy || frameCount === 0}
                         onclick={() => void renderInBrowser()}
-                        class="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                        class={btnPrimary}
                     >
                         {renderer.busy
-                            ? (renderPhaseLabels[
-                                  renderer.phase as keyof typeof renderPhaseLabels
-                              ] ?? 'Rendering…')
+                            ? 'Rendering…'
                             : `Render video (${project.fps} fps)`}
                     </button>
-                    <span class="text-xs text-neutral-400">
-                        renders in your browser
-                    </span>
+                    <span class={microLabel}>RENDERS IN YOUR BROWSER</span>
                 </div>
             {:else}
                 <Form action={storeVideo(project.id)}>
                     {#snippet children({ errors, processing })}
-                        <div class="flex flex-col items-end gap-1">
+                        <div class="flex flex-col items-end gap-1.5">
                             {#if errors.frames || errors.video}
-                                <p class="text-sm text-red-600">
+                                <p
+                                    class="font-mono text-xs text-red-600 dark:text-red-400"
+                                >
                                     {errors.frames ?? errors.video}
                                 </p>
                             {/if}
@@ -172,13 +175,12 @@
                                 disabled={processing ||
                                     videoInFlight ||
                                     frameCount === 0}
-                                class="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                                class={btnPrimary}
                             >
                                 Render video ({project.fps} fps)
                             </button>
-                            <span class="text-xs text-neutral-400">
-                                renders on the server
-                            </span>
+                            <span class={microLabel}>RENDERS ON THE SERVER</span
+                            >
                         </div>
                     {/snippet}
                 </Form>
@@ -186,23 +188,19 @@
         </div>
 
         {#if renderer.busy}
-            <div class="mt-4">
-                <div class="h-2 overflow-hidden rounded-full bg-neutral-200">
+            <div class="mt-5">
+                <div class={hairlineTrack}>
                     <div
-                        class="h-full rounded-full bg-neutral-900 transition-[width] duration-150"
+                        class={cn(hairlineFill, 'bg-blue-500')}
                         style:width={`${Math.round(renderer.progress * 100)}%`}
                     ></div>
                 </div>
-                <p class="mt-1 text-xs text-neutral-500">
-                    {renderPhaseLabels[
-                        renderer.phase as keyof typeof renderPhaseLabels
-                    ] ?? 'Rendering…'}
-                </p>
+                <p class={cn(microLabel, 'mt-1.5')}>{renderPhaseLabel}</p>
             </div>
         {/if}
 
         {#if video}
-            <div class="mt-4 space-y-3">
+            <div class="mt-5 space-y-3">
                 <div class="flex items-center gap-2">
                     <StatusBadge
                         label={video.status}
@@ -214,7 +212,11 @@
                         pulse={videoInFlight}
                     />
                     {#if video.status === 'failed' && video.error}
-                        <p class="text-sm text-red-600">{video.error}</p>
+                        <p
+                            class="font-mono text-xs text-red-600 dark:text-red-400"
+                        >
+                            {video.error}
+                        </p>
                     {/if}
                 </div>
 
@@ -223,14 +225,17 @@
                     <video
                         controls
                         src={video.url}
-                        class={cn('max-h-96 rounded-lg bg-black', aspectClass)}
+                        class={cn(
+                            'max-h-96 border border-zinc-200 bg-black dark:border-zinc-800',
+                            aspectClass,
+                        )}
                     ></video>
                     {#if video.downloadUrl}
                         <a
                             href={video.downloadUrl}
-                            class="inline-block text-sm font-medium text-neutral-700 underline"
+                            class="inline-block font-mono text-xs underline underline-offset-4 hover:text-zinc-600 dark:hover:text-zinc-300"
                         >
-                            Download MP4
+                            DOWNLOAD MP4
                         </a>
                     {/if}
                 {/if}
@@ -239,20 +244,24 @@
     </section>
 
     <section>
-        <h2 class="mb-3 text-base font-semibold">Frames</h2>
+        <h2 class={cn(microLabel, 'mb-3')}>
+            FRAMES · <span class="tabular-nums">{frameCount}</span>
+        </h2>
 
         {#if frames.length === 0}
             <p
-                class="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-500"
+                class="border-l-4 border-zinc-200 py-4 pl-4 dark:border-zinc-700"
             >
-                No frames yet — open capture to start shooting.
+                <span class={emptyState}>
+                    NO FRAMES YET — OPEN CAPTURE TO START SHOOTING
+                </span>
             </p>
         {:else}
             <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
                 {#each frames as frame (frame.id)}
                     <div
                         class={cn(
-                            'group relative overflow-hidden rounded-lg bg-neutral-200',
+                            'group relative overflow-hidden bg-zinc-200 dark:bg-zinc-800',
                             aspectClass,
                         )}
                     >
@@ -263,14 +272,14 @@
                             class="h-full w-full object-cover"
                         />
                         <span
-                            class="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 text-xs text-white tabular-nums"
+                            class="absolute bottom-1 left-1 bg-black/60 px-1.5 font-mono text-[10px] text-white tabular-nums"
                         >
                             {frame.sequence}
                         </span>
                         <button
                             type="button"
                             aria-label={`Delete frame ${frame.sequence}`}
-                            class="absolute top-1 right-1 rounded bg-black/60 px-1.5 py-0.5 text-xs text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
+                            class="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 text-xs text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
                             onclick={() => deleteFrame(frame)}
                         >
                             ✕

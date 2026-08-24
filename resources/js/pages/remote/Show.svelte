@@ -78,14 +78,16 @@
 <AppHead title={`Remote – ${projectName}`} />
 
 <div
-    class="flex min-h-dvh flex-col bg-neutral-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-neutral-100 select-none"
+    class="dark flex min-h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100 select-none"
 >
     <header class="flex items-center justify-between px-5 py-4">
         <div>
-            <p class="text-xs tracking-widest text-neutral-500 uppercase">
-                Remote
+            <p class="font-mono text-[10px] tracking-[0.25em] text-zinc-500">
+                REMOTE
             </p>
-            <h1 class="text-lg font-semibold">{projectName}</h1>
+            <h1 class="font-display text-lg leading-snug font-bold">
+                {projectName}
+            </h1>
         </div>
 
         <div class="flex items-center gap-2 text-sm">
@@ -93,18 +95,18 @@
                 class={cn(
                     'h-2.5 w-2.5 rounded-full',
                     connected
-                        ? 'bg-emerald-400'
+                        ? 'animate-pulse bg-emerald-400'
                         : connection.state === 'connecting'
                           ? 'animate-pulse bg-amber-400'
                           : 'bg-red-500',
                 )}
             ></span>
-            <span class="text-neutral-400">
+            <span class="font-mono text-[10px] tracking-[0.25em] text-zinc-400">
                 {connected
-                    ? 'Connected'
+                    ? 'CONNECTED'
                     : connection.state === 'connecting'
-                      ? 'Connecting…'
-                      : 'Reconnecting…'}
+                      ? 'CONNECTING'
+                      : 'RECONNECTING'}
             </span>
         </div>
     </header>
@@ -122,7 +124,7 @@
             <select
                 bind:value={intervalSeconds}
                 disabled={intervalRunning}
-                class="min-h-11 touch-manipulation rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-200 disabled:opacity-50"
+                class="min-h-11 touch-manipulation border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-zinc-200 disabled:opacity-50"
             >
                 {#each INTERVAL_CHOICES as seconds (seconds)}
                     <option value={seconds}>every {seconds}s</option>
@@ -134,25 +136,23 @@
                 disabled={!connected}
                 onclick={toggleInterval}
                 class={cn(
-                    'min-h-11 touch-manipulation rounded-xl border px-5 py-2 text-sm font-medium transition disabled:opacity-40',
+                    'min-h-11 touch-manipulation border px-5 py-2 font-mono text-xs tracking-[0.15em] transition-colors duration-200 disabled:opacity-40',
                     intervalRunning
                         ? 'border-red-500 bg-red-500/10 text-red-400'
-                        : 'border-neutral-600 text-neutral-200',
+                        : 'border-zinc-600 text-zinc-200',
                 )}
             >
-                {intervalRunning ? 'Stop interval' : 'Start interval'}
+                {intervalRunning ? 'STOP INTERVAL' : 'START INTERVAL'}
             </button>
         </div>
 
         <div
-            class="flex items-center justify-between rounded-2xl bg-neutral-900 p-4"
+            class={cn(
+                'flex items-center justify-between border-l-4 bg-zinc-900 p-4',
+                connected ? 'border-emerald-500' : 'border-zinc-700',
+            )}
         >
-            <div
-                class={cn(
-                    'h-16 overflow-hidden rounded-lg bg-neutral-800',
-                    aspectClass,
-                )}
-            >
+            <div class={cn('h-16 overflow-hidden bg-zinc-800', aspectClass)}>
                 {#if thumbnailUrl}
                     <img
                         src={thumbnailUrl}
@@ -163,9 +163,13 @@
             </div>
 
             <div class="text-right">
-                <p class="text-3xl font-semibold tabular-nums">{frameCount}</p>
-                <p class="text-xs text-neutral-500">
-                    frames · {fps} fps
+                <p class="font-mono text-3xl font-semibold tabular-nums">
+                    {frameCount}
+                </p>
+                <p
+                    class="font-mono text-[10px] tracking-[0.25em] text-zinc-500"
+                >
+                    FRAMES · {fps} FPS
                 </p>
             </div>
         </div>

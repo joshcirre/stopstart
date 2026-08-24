@@ -5,7 +5,18 @@
 <script lang="ts">
     import { Form, Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
-    import StatusBadge from '@/components/StatusBadge.svelte';
+    import {
+        btnDangerText,
+        btnPrimary,
+        displayHeading,
+        emptyState,
+        headerRail,
+        input,
+        microLabel,
+        monoMeta,
+        railAccent,
+        select,
+    } from '@/lib/styles';
     import { cn } from '@/lib/utils';
     import { capture, destroy, show, store } from '@/routes/projects';
     import type { ProjectsIndexProps, ProjectSummary } from '@/types';
@@ -13,12 +24,18 @@
 
     let { projects }: ProjectsIndexProps = $props();
 
-    const videoTones = {
-        pending: 'info',
-        processing: 'warning',
-        completed: 'success',
-        failed: 'danger',
+    const statusRails = {
+        pending: railAccent.blue,
+        processing: railAccent.amber,
+        completed: railAccent.emerald,
+        failed: railAccent.red,
     } as const;
+
+    function railFor(project: ProjectSummary): string {
+        return project.videoStatus
+            ? statusRails[project.videoStatus]
+            : railAccent.muted;
+    }
 
     function deleteProject(project: ProjectSummary): void {
         if (
@@ -33,27 +50,37 @@
 
 <AppHead title="Projects" />
 
-<div class="space-y-8">
-    <section class="rounded-xl border border-neutral-200 bg-white p-5">
-        <h2 class="text-base font-semibold">New project</h2>
+<div class="space-y-8 sm:space-y-10">
+    <div class={headerRail}>
+        <p class={cn(microLabel, 'mb-2')}>STOP MOTION</p>
+        <h1 class={displayHeading}>Projects</h1>
+    </div>
 
-        <Form action={store()} resetOnSuccess class="mt-4">
+    <section
+        class={cn(
+            'border-l-4 bg-white p-4 shadow-sm sm:p-6 dark:bg-zinc-900',
+            railAccent.amber,
+        )}
+    >
+        <h2 class={cn(microLabel, 'mb-4')}>NEW PROJECT</h2>
+
+        <Form action={store()} resetOnSuccess>
             {#snippet children({ errors, processing })}
-                <div class="flex flex-wrap items-end gap-4">
-                    <label class="flex min-w-48 flex-1 flex-col gap-1">
-                        <span class="text-sm font-medium">Name</span>
+                <div class="flex flex-wrap items-end gap-4 sm:gap-6">
+                    <label class="flex min-w-48 flex-1 flex-col gap-1.5">
+                        <span class={microLabel}>NAME</span>
                         <input
                             type="text"
                             name="name"
                             required
                             placeholder="Lego walk cycle"
-                            class="rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
+                            class={input}
                         />
                     </label>
 
                     <fieldset class="flex gap-2">
-                        <legend class="mb-1 text-sm font-medium">
-                            Orientation
+                        <legend class={cn(microLabel, 'mb-1.5')}>
+                            ORIENTATION
                         </legend>
                         {#each [{ value: 'landscape', label: 'Landscape', hint: '1920×1080' }, { value: 'portrait', label: 'Portrait', hint: '1080×1920' }] as option (option.value)}
                             <label class="cursor-pointer">
@@ -65,10 +92,12 @@
                                     class="peer sr-only"
                                 />
                                 <span
-                                    class="flex flex-col rounded-lg border border-neutral-300 px-3 py-1.5 text-sm peer-checked:border-neutral-900 peer-checked:bg-neutral-900 peer-checked:text-white"
+                                    class="flex flex-col border border-zinc-300 px-3 py-1.5 text-sm peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white dark:border-zinc-700 dark:peer-checked:border-zinc-100 dark:peer-checked:bg-zinc-100 dark:peer-checked:text-zinc-900"
                                 >
                                     {option.label}
-                                    <span class="text-xs opacity-70">
+                                    <span
+                                        class="font-mono text-[10px] opacity-70 tabular-nums"
+                                    >
                                         {option.hint}
                                     </span>
                                 </span>
@@ -76,12 +105,9 @@
                         {/each}
                     </fieldset>
 
-                    <label class="flex flex-col gap-1">
-                        <span class="text-sm font-medium">FPS</span>
-                        <select
-                            name="fps"
-                            class="rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                        >
+                    <label class="flex flex-col gap-1.5">
+                        <span class={microLabel}>FPS</span>
+                        <select name="fps" class={select}>
                             {#each FPS_CHOICES as fps (fps)}
                                 <option value={fps} selected={fps === 12}>
                                     {fps}
@@ -93,14 +119,16 @@
                     <button
                         type="submit"
                         disabled={processing}
-                        class="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                        class={btnPrimary}
                     >
                         {processing ? 'Creating…' : 'Create project'}
                     </button>
                 </div>
 
                 {#if errors.name || errors.orientation || errors.fps}
-                    <p class="mt-2 text-sm text-red-600">
+                    <p
+                        class="mt-3 font-mono text-xs text-red-600 dark:text-red-400"
+                    >
                         {errors.name ?? errors.orientation ?? errors.fps}
                     </p>
                 {/if}
@@ -109,28 +137,28 @@
     </section>
 
     <section>
-        <h2 class="mb-3 text-base font-semibold">Your projects</h2>
+        <h2 class={cn(microLabel, 'mb-3')}>YOUR PROJECTS</h2>
 
         {#if projects.length === 0}
             <p
-                class="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-500"
+                class="border-l-4 border-zinc-200 py-4 pl-4 dark:border-zinc-700"
             >
-                No projects yet — create one above and start capturing.
+                <span class={emptyState}>
+                    NO PROJECTS YET — CREATE ONE ABOVE
+                </span>
             </p>
         {:else}
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {#each projects as project (project.id)}
                     <div
-                        class="overflow-hidden rounded-xl border border-neutral-200 bg-white"
+                        class={cn(
+                            'border-l-4 bg-white shadow-sm transition-colors duration-200 dark:bg-zinc-900',
+                            railFor(project),
+                        )}
                     >
                         <Link
                             href={show(project.id)}
-                            class={cn(
-                                'block bg-neutral-100',
-                                project.orientation === 'landscape'
-                                    ? 'aspect-video'
-                                    : 'aspect-video',
-                            )}
+                            class="block aspect-video bg-zinc-100 dark:bg-zinc-800"
                         >
                             {#if project.latestFrameThumbnailUrl}
                                 <img
@@ -140,63 +168,46 @@
                                 />
                             {:else}
                                 <span
-                                    class="grid h-full w-full place-items-center text-sm text-neutral-400"
+                                    class={cn(
+                                        'grid h-full w-full place-items-center',
+                                        emptyState,
+                                    )}
                                 >
-                                    No frames yet
+                                    NO FRAMES YET
                                 </span>
                             {/if}
                         </Link>
 
                         <div class="space-y-2 p-4">
-                            <div
-                                class="flex items-center justify-between gap-2"
+                            <Link
+                                href={show(project.id)}
+                                class="block truncate font-medium hover:underline"
                             >
-                                <Link
-                                    href={show(project.id)}
-                                    class="truncate font-medium hover:underline"
-                                >
-                                    {project.name}
-                                </Link>
-                                <span
-                                    class="text-sm whitespace-nowrap text-neutral-500 tabular-nums"
-                                >
-                                    {project.frameCount}
-                                    {project.frameCount === 1
-                                        ? 'frame'
-                                        : 'frames'}
-                                </span>
-                            </div>
+                                {project.name}
+                            </Link>
 
-                            <div class="flex flex-wrap items-center gap-1.5">
-                                <StatusBadge
-                                    label={project.orientation === 'landscape'
-                                        ? 'Landscape'
-                                        : 'Portrait'}
-                                />
-                                <StatusBadge label={`${project.fps} fps`} />
-                                {#if project.videoStatus}
-                                    <StatusBadge
-                                        label={project.videoStatus}
-                                        tone={videoTones[project.videoStatus]}
-                                        pulse={project.videoStatus ===
-                                            'processing'}
-                                    />
-                                {/if}
-                            </div>
+                            <p class={monoMeta}>
+                                {project.frameCount}
+                                {project.frameCount === 1 ? 'FRAME' : 'FRAMES'} ·
+                                {project.fps} FPS · {project.orientation ===
+                                'landscape'
+                                    ? 'LANDSCAPE'
+                                    : 'PORTRAIT'}
+                            </p>
 
                             <div class="flex items-center gap-3 pt-1">
                                 <Link
                                     href={capture(project.id)}
-                                    class="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white"
+                                    class={cn(btnPrimary, 'px-3 py-1.5')}
                                 >
                                     Capture
                                 </Link>
                                 <button
                                     type="button"
-                                    class="text-sm text-red-600 hover:underline"
+                                    class={btnDangerText}
                                     onclick={() => deleteProject(project)}
                                 >
-                                    Delete
+                                    DELETE
                                 </button>
                             </div>
                         </div>

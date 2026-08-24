@@ -26,7 +26,7 @@
     {#each frames as frame (frame.key)}
         <div
             class={cn(
-                'relative h-16 shrink-0 overflow-hidden rounded ring-2',
+                'relative h-16 shrink-0 overflow-hidden ring-2',
                 aspectClass,
                 frame.failed
                     ? 'ring-red-500'
@@ -41,7 +41,7 @@
                 class="h-full w-full object-cover"
             />
             <span
-                class="absolute right-0 bottom-0 rounded-tl bg-black/60 px-1 text-[10px] text-white tabular-nums"
+                class="absolute right-0 bottom-0 bg-black/60 px-1 font-mono text-[10px] text-white tabular-nums"
             >
                 {frame.sequence}
             </span>

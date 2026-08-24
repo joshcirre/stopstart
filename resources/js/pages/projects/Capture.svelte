@@ -197,18 +197,18 @@
 <AppHead title={`Capture – ${project.name}`} />
 
 <div
-    class="flex h-dvh flex-col bg-neutral-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-neutral-100"
+    class="dark flex h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100"
 >
     <header class="flex items-center justify-between gap-3 px-4 py-3">
         <Link
             href={show(project.id)}
-            class="text-sm text-neutral-400 hover:text-white"
+            class="font-mono text-xs text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
         >
             ← {project.name}
         </Link>
 
         <div class="flex items-center gap-3">
-            <span class="text-sm text-neutral-400 tabular-nums">
+            <span class="font-mono text-sm text-zinc-300 tabular-nums">
                 #{frameCount}
                 {#if uploader.inFlight}
                     <span class="text-amber-400">↑</span>
@@ -216,35 +216,35 @@
             </span>
             <button
                 type="button"
-                class="rounded-full border border-neutral-700 px-3 py-1 text-sm text-neutral-300 hover:border-neutral-500"
+                class="border border-zinc-700 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500"
                 onclick={() => (showPairing = !showPairing)}
             >
-                Remote
+                REMOTE
             </button>
         </div>
     </header>
 
     {#if showPairing}
         <div
-            class="mx-4 mb-2 flex items-center gap-4 rounded-xl bg-neutral-900 p-4"
+            class="mx-4 mb-2 flex items-center gap-4 border-l-4 border-blue-500 bg-zinc-900 p-4"
         >
             <QrCode value={remoteUrl} class="w-28 shrink-0" />
             <div class="min-w-0 space-y-2 text-sm">
-                <p class="text-neutral-300">
+                <p class="text-zinc-300">
                     Scan with your phone to use it as a remote shutter.
                 </p>
-                <p class="truncate font-mono text-xs text-neutral-500">
+                <p class="truncate font-mono text-xs text-zinc-500">
                     {remoteUrl}
                 </p>
                 <button
                     type="button"
-                    class="rounded-full border border-neutral-700 px-3 py-1 text-xs text-neutral-300"
+                    class="border border-zinc-700 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500"
                     onclick={() => {
                         void navigator.clipboard?.writeText(remoteUrl);
                         toast.success('Remote link copied');
                     }}
                 >
-                    Copy link
+                    COPY LINK
                 </button>
             </div>
         </div>
@@ -270,7 +270,7 @@
     {#if camera.devices.length > 1}
         <div class="flex justify-center px-4 pt-2">
             <select
-                class="rounded-lg border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs text-neutral-300"
+                class="border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-300"
                 value={camera.activeDeviceId}
                 onchange={(event) =>
                     void camera.switchTo(event.currentTarget.value)}
@@ -287,13 +287,15 @@
     <footer class="space-y-1 px-4 pt-3 pb-2">
         <div class="flex items-center justify-between gap-4">
             <div class="flex w-40 flex-col gap-1">
-                <label class="flex items-center gap-2 text-xs text-neutral-400">
+                <label
+                    class="flex items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-400"
+                >
                     <input
                         type="checkbox"
                         bind:checked={onionSkinEnabled}
                         class="accent-white"
                     />
-                    Onion skin
+                    ONION SKIN
                 </label>
                 <input
                     type="range"
@@ -315,7 +317,7 @@
                 <select
                     bind:value={timer.intervalSeconds}
                     disabled={timer.running}
-                    class="rounded-lg border border-neutral-700 bg-neutral-900 px-2 py-1 text-xs text-neutral-300 disabled:opacity-50"
+                    class="border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-300 disabled:opacity-50"
                 >
                     {#each INTERVAL_CHOICES as seconds (seconds)}
                         <option value={seconds}>every {seconds}s</option>
@@ -325,18 +327,20 @@
                     type="button"
                     disabled={videoInFlight || camera.status !== 'active'}
                     onclick={toggleInterval}
-                    class="rounded-full border px-4 py-1.5 text-sm font-medium transition disabled:opacity-40 {timer.running
+                    class="border px-4 py-1.5 font-mono text-xs tracking-[0.15em] transition-colors duration-200 disabled:opacity-40 {timer.running
                         ? 'border-red-500 bg-red-500/10 text-red-400'
-                        : 'border-neutral-600 text-neutral-200'}"
+                        : 'border-zinc-600 text-zinc-200'}"
                 >
-                    {timer.running ? 'Stop interval' : 'Start interval'}
+                    {timer.running ? 'STOP INTERVAL' : 'START INTERVAL'}
                 </button>
             </div>
         </div>
 
         {#if videoInFlight}
-            <p class="text-center text-xs text-amber-400">
-                Rendering in progress — interval capture is paused.
+            <p
+                class="text-center font-mono text-[10px] tracking-[0.25em] text-amber-400"
+            >
+                RENDERING IN PROGRESS — INTERVAL PAUSED
             </p>
         {/if}
 
