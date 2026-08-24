@@ -26,10 +26,14 @@
         railCard,
         select,
     } from '@/lib/styles';
+    import { btnGhostMono } from '@/lib/styles';
     import { toast } from '@/lib/toast.svelte';
     import { cn } from '@/lib/utils';
     import { capture, update as updateProject } from '@/routes/projects';
-    import { destroy as destroyFrame } from '@/routes/projects/frames';
+    import {
+        destroy as destroyFrame,
+        move as moveFrame,
+    } from '@/routes/projects/frames';
     import {
         store as storeVideo,
         upload as uploadVideo,
@@ -138,11 +142,37 @@
         );
     }
 
-    function deleteFrame(frame: Frame): void {
-        if (confirm(`Delete frame ${frame.sequence}?`)) {
-            router.delete(destroyFrame([project.id, frame.id]), {
+    let selectedFrameId = $state<number | null>(null);
+
+    const selectedFrame = $derived(
+        frames.find((frame) => frame.id === selectedFrameId) ?? null,
+    );
+
+    const selectedIndex = $derived(
+        frames.findIndex((frame) => frame.id === selectedFrameId),
+    );
+
+    function toggleFrameSelection(frame: Frame): void {
+        selectedFrameId = selectedFrameId === frame.id ? null : frame.id;
+    }
+
+    // Selection is the confirmation step: tap to select, tap DELETE.
+    function deleteSelectedFrame(): void {
+        if (selectedFrame) {
+            router.delete(destroyFrame([project.id, selectedFrame.id]), {
                 preserveScroll: true,
             });
+            selectedFrameId = null;
+        }
+    }
+
+    function moveSelectedFrame(direction: 'earlier' | 'later'): void {
+        if (selectedFrame) {
+            router.patch(
+                moveFrame([project.id, selectedFrame.id]),
+                { direction },
+                { preserveScroll: true },
+            );
         }
     }
 </script>
@@ -349,13 +379,64 @@
                 </span>
             </p>
         {:else}
+            {#if selectedFrame}
+                <div
+                    class="mb-3 flex flex-wrap items-center gap-2 border-l-4 border-amber-400 bg-white p-2 pl-3 dark:bg-zinc-900"
+                >
+                    <span class={monoMeta}>
+                        FRAME {selectedFrame.sequence}
+                    </span>
+                    <button
+                        type="button"
+                        class={btnGhostMono}
+                        disabled={selectedIndex <= 0}
+                        onclick={() => moveSelectedFrame('earlier')}
+                    >
+                        ← MOVE
+                    </button>
+                    <button
+                        type="button"
+                        class={btnGhostMono}
+                        disabled={selectedIndex >= frames.length - 1}
+                        onclick={() => moveSelectedFrame('later')}
+                    >
+                        MOVE →
+                    </button>
+                    <button
+                        type="button"
+                        class="border border-red-500 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-red-600 transition-colors duration-200 hover:bg-red-500/10 dark:text-red-400"
+                        onclick={deleteSelectedFrame}
+                    >
+                        DELETE
+                    </button>
+                    <button
+                        type="button"
+                        class={btnGhostMono}
+                        onclick={() => (selectedFrameId = null)}
+                    >
+                        DONE
+                    </button>
+                </div>
+            {:else}
+                <p class={cn(microLabel, 'mb-3')}>
+                    TAP A FRAME TO MOVE OR DELETE IT
+                </p>
+            {/if}
+
             <div class="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
                 {#each frames as frame (frame.id)}
-                    <div
+                    <button
+                        type="button"
+                        aria-pressed={selectedFrameId === frame.id}
+                        aria-label={`Select frame ${frame.sequence}`}
                         class={cn(
-                            'group relative overflow-hidden bg-zinc-200 dark:bg-zinc-800',
+                            'relative touch-manipulation overflow-hidden bg-zinc-200 dark:bg-zinc-800',
                             aspectClass,
+                            selectedFrameId === frame.id
+                                ? 'ring-2 ring-amber-400'
+                                : 'ring-2 ring-transparent',
                         )}
+                        onclick={() => toggleFrameSelection(frame)}
                     >
                         <img
                             src={frame.thumbnailUrl}
@@ -368,15 +449,7 @@
                         >
                             {frame.sequence}
                         </span>
-                        <button
-                            type="button"
-                            aria-label={`Delete frame ${frame.sequence}`}
-                            class="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 text-xs text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100"
-                            onclick={() => deleteFrame(frame)}
-                        >
-                            ✕
-                        </button>
-                    </div>
+                    </button>
                 {/each}
             </div>
         {/if}

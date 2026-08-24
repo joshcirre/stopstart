@@ -20,6 +20,7 @@ Route::get('/projects/{project}/capture', [CaptureController::class, 'show'])->n
 
 Route::post('/projects/{project}/frames', [FrameController::class, 'store'])->name('projects.frames.store');
 Route::delete('/projects/{project}/frames/{frame}', [FrameController::class, 'destroy'])->name('projects.frames.destroy');
+Route::patch('/projects/{project}/frames/{frame}/move', [FrameController::class, 'move'])->name('projects.frames.move');
 Route::get('/projects/{project}/frames/{frame}/image', [FrameController::class, 'image'])->name('projects.frames.image');
 
 Route::post('/projects/{project}/videos', [VideoController::class, 'store'])->name('projects.videos.store');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\FrameCaptured;
 use App\Http\Controllers\Concerns\AuthorizesOwner;
+use App\Http\Requests\MoveFrameRequest;
 use App\Http\Requests\StoreFrameRequest;
 use App\Models\Frame;
 use App\Models\Project;
@@ -11,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -62,6 +64,47 @@ class FrameController extends Controller
         abort_unless($frame->project_id === $project->id, 404);
 
         return Storage::response($frame->path);
+    }
+
+    /**
+     * Swaps the frame's sequence with its neighbor. The same lock that
+     * serializes capture sequencing prevents races with in-flight
+     * uploads; the pass through sequence 0 (never assigned to frames)
+     * sidesteps the unique [project_id, sequence] index mid-swap.
+     */
+    public function move(MoveFrameRequest $request, Project $project, Frame $frame): RedirectResponse
+    {
+        $this->authorizeOwner($request, $project);
+
+        abort_unless($frame->project_id === $project->id, 404);
+
+        $earlier = $request->string('direction')->value() === 'earlier';
+
+        Cache::lock("project:{$project->id}:frame-sequence", 10)
+            ->block(5, function () use ($project, $frame, $earlier): void {
+                $neighbor = $project->frames()
+                    ->when(
+                        $earlier,
+                        fn ($query) => $query->where('sequence', '<', $frame->sequence)->orderByDesc('sequence'),
+                        fn ($query) => $query->where('sequence', '>', $frame->sequence)->orderBy('sequence'),
+                    )
+                    ->first();
+
+                if ($neighbor === null) {
+                    return;
+                }
+
+                DB::transaction(function () use ($frame, $neighbor): void {
+                    $frameTarget = $neighbor->sequence;
+                    $neighborTarget = $frame->sequence;
+
+                    $frame->update(['sequence' => 0]);
+                    $neighbor->update(['sequence' => $neighborTarget]);
+                    $frame->update(['sequence' => $frameTarget]);
+                });
+            });
+
+        return back();
     }
 
     public function destroy(Request $request, Project $project, Frame $frame): RedirectResponse

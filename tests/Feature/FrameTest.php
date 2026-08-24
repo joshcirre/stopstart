@@ -99,6 +99,67 @@ it('streams a frame image to its owner', function () {
         ->assertNotFound();
 });
 
+it('reorders a frame by swapping with its neighbor', function () {
+    $project = Project::factory()->create();
+    $frames = collect([1, 2, 3])->map(fn (int $sequence) => Frame::factory()
+        ->for($project)
+        ->create(['sequence' => $sequence]));
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->patch(route('projects.frames.move', [$project, $frames[1]]), [
+            'direction' => 'earlier',
+        ])
+        ->assertRedirect();
+
+    expect($frames[1]->refresh()->sequence)->toBe(1)
+        ->and($frames[0]->refresh()->sequence)->toBe(2)
+        ->and($frames[2]->refresh()->sequence)->toBe(3);
+});
+
+it('swaps across sequence gaps when moving later', function () {
+    $project = Project::factory()->create();
+    $first = Frame::factory()->for($project)->create(['sequence' => 1]);
+    $gapped = Frame::factory()->for($project)->create(['sequence' => 5]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->patch(route('projects.frames.move', [$project, $first]), [
+            'direction' => 'later',
+        ])
+        ->assertRedirect();
+
+    expect($first->refresh()->sequence)->toBe(5)
+        ->and($gapped->refresh()->sequence)->toBe(1);
+});
+
+it('leaves edge frames in place when moved outward', function () {
+    $project = Project::factory()->create();
+    $only = Frame::factory()->for($project)->create(['sequence' => 1]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->patch(route('projects.frames.move', [$project, $only]), [
+            'direction' => 'earlier',
+        ])
+        ->assertRedirect();
+
+    expect($only->refresh()->sequence)->toBe(1);
+});
+
+it('guards frame moves by owner and direction', function () {
+    $frame = Frame::factory()->create();
+
+    $this->withCookie('owner_token', ownerToken())
+        ->patch(route('projects.frames.move', [$frame->project, $frame]), [
+            'direction' => 'earlier',
+        ])
+        ->assertNotFound();
+
+    $this->withCookie('owner_token', $frame->project->owner_token)
+        ->patch(route('projects.frames.move', [$frame->project, $frame]), [
+            'direction' => 'sideways',
+        ])
+        ->assertSessionHasErrors('direction');
+});
+
 it('cannot delete a frame through a different project', function () {
     $frame = Frame::factory()->create();
     $otherProject = Project::factory()->create(['owner_token' => $frame->project->owner_token]);
