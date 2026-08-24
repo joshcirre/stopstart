@@ -2,6 +2,7 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import type {
     FrameCapturedEvent,
+    LayerUpdatedEvent,
     RemoteCommandReceivedEvent,
     VideoStatusUpdatedEvent,
 } from '@/types/echo';
@@ -32,6 +33,7 @@ export interface ProjectChannelHandlers {
     onRemoteCommand?: (event: RemoteCommandReceivedEvent) => void;
     onFrameCaptured?: (event: FrameCapturedEvent) => void;
     onVideoStatusUpdated?: (event: VideoStatusUpdatedEvent) => void;
+    onLayerUpdated?: (event: LayerUpdatedEvent) => void;
 }
 
 /**
@@ -58,6 +60,10 @@ export function subscribeToProjectChannel(
             PROJECT_EVENTS.videoStatusUpdated,
             handlers.onVideoStatusUpdated,
         );
+    }
+
+    if (handlers.onLayerUpdated) {
+        channel.listen(PROJECT_EVENTS.layerUpdated, handlers.onLayerUpdated);
     }
 
     return () => getEcho().leaveChannel(channelName);

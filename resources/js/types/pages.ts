@@ -1,5 +1,8 @@
 import type {
+    AudioLayer,
     CaptureProject,
+    DubExport,
+    DubVideo,
     Frame,
     Orientation,
     Project,
@@ -26,6 +29,9 @@ export interface ProjectShowProps {
     frames: Frame[];
     frameCount: number;
     video: Video | null;
+    export: Video | null;
+    layerCount: number;
+    dubUrl: string;
 }
 
 export interface ProjectCaptureProps {
@@ -43,4 +49,14 @@ export interface RemoteShowProps {
     fps: number;
     frameCount: number;
     lastFrameThumbnailUrl: string | null;
+}
+
+export interface RemoteDubProps {
+    projectName: string;
+    remoteToken: string;
+    orientation: Orientation;
+    fps: number;
+    video: DubVideo | null;
+    layers: AudioLayer[];
+    export: DubExport | null;
 }

@@ -52,3 +52,34 @@ export interface StripFrame {
     pending?: boolean;
     failed?: boolean;
 }
+
+export interface AudioLayer {
+    id: number;
+    name: string;
+    /** Seconds into the video where the layer starts. */
+    offset: number;
+    /** Gain, 0–1.5. */
+    volume: number;
+    /** Seconds. */
+    duration: number;
+    /** Same-origin stream, fetchable without bucket CORS. */
+    audioUrl: string;
+}
+
+export interface AudioLayerStoreResponse {
+    layer: AudioLayer;
+    layerCount: number;
+}
+
+export interface DubVideo {
+    id: number;
+    /** Temporary URL for <video> playback. */
+    url: string;
+    /** Same-origin bytes for the exporter's fetch(). */
+    streamUrl: string;
+}
+
+export interface DubExport {
+    id: number;
+    url: string | null;
+}

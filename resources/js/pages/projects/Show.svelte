@@ -6,6 +6,7 @@
     import { Form, Link, router } from '@inertiajs/svelte';
     import { untrack } from 'svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import QrCode from '@/components/QrCode.svelte';
     import StatusBadge from '@/components/StatusBadge.svelte';
     import {
         ClientRenderer,
@@ -35,7 +36,15 @@
     import type { Frame, ProjectShowProps } from '@/types';
     import { ORIENTATION_DIMENSIONS } from '@/types';
 
-    let { project, frames, frameCount, video }: ProjectShowProps = $props();
+    let {
+        project,
+        frames,
+        frameCount,
+        video,
+        export: dubExport,
+        layerCount,
+        dubUrl,
+    }: ProjectShowProps = $props();
 
     const aspectClass = $derived(
         project.orientation === 'landscape' ? 'aspect-video' : 'aspect-[9/16]',
@@ -112,7 +121,9 @@
     $effect(() =>
         subscribeToProjectChannel(project.remoteToken, {
             onFrameCaptured: throttledFrameReload,
-            onVideoStatusUpdated: () => router.reload({ only: ['video'] }),
+            onVideoStatusUpdated: () =>
+                router.reload({ only: ['video', 'export'] }),
+            onLayerUpdated: () => router.reload({ only: ['layerCount'] }),
         }),
     );
 
@@ -238,6 +249,61 @@
                             DOWNLOAD MP4
                         </a>
                     {/if}
+                {/if}
+            </div>
+        {/if}
+    </section>
+
+    <section class={cn(railCard, railAccent.blue)}>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class={microLabel}>
+                AUDIO · <span class="tabular-nums">{layerCount}</span>
+                {layerCount === 1 ? 'LAYER' : 'LAYERS'}
+            </h2>
+
+            {#if video?.status === 'completed'}
+                <a href={dubUrl} class={btnPrimary}>Open dub workspace</a>
+            {:else}
+                <span class={emptyState}>RENDER A VIDEO TO START DUBBING</span>
+            {/if}
+        </div>
+
+        {#if video?.status === 'completed'}
+            <div class="mt-4 flex items-center gap-4">
+                <QrCode value={dubUrl} class="w-24 shrink-0" />
+                <div class="min-w-0 space-y-2">
+                    <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                        Scan with your phone to record character voices over the
+                        rendered video.
+                    </p>
+                    <p
+                        class="truncate font-mono text-xs text-zinc-400 dark:text-zinc-500"
+                    >
+                        {dubUrl}
+                    </p>
+                </div>
+            </div>
+        {/if}
+
+        {#if dubExport?.status === 'completed' && dubExport.url}
+            <div class="mt-5 space-y-3">
+                <p class={microLabel}>LATEST EXPORT WITH AUDIO</p>
+                <!-- svelte-ignore a11y_media_has_caption -->
+                <video
+                    controls
+                    src={dubExport.url}
+                    class={cn(
+                        'max-h-96 border border-zinc-200 bg-black dark:border-zinc-800',
+                        aspectClass,
+                    )}
+                ></video>
+                {#if dubExport.downloadUrl}
+                    <a
+                        href={dubExport.downloadUrl}
+                        class="inline-block font-mono text-xs underline underline-offset-4 hover:text-zinc-600 dark:hover:text-zinc-300"
+                    >
+                        DOWNLOAD MP4 WITH AUDIO
+                    </a>
                 {/if}
             </div>
         {/if}

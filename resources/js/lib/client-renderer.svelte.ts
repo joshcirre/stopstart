@@ -5,7 +5,7 @@ import {
     CanvasSource,
     Mp4OutputFormat,
     Output,
-    QUALITY_HIGH,
+    Quality,
 } from 'mediabunny';
 import type { Frame, Video } from '@/types/models';
 
@@ -111,7 +111,7 @@ export class ClientRenderer {
 
         const source = new CanvasSource(canvas, {
             codec: 'avc',
-            quality: QUALITY_HIGH,
+            quality: new Quality('high'),
         });
 
         const output = new Output({

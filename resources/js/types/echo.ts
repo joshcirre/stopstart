@@ -8,6 +8,7 @@ export const PROJECT_EVENTS = {
     remoteCommand: '.remote.command',
     frameCaptured: '.frame.captured',
     videoStatusUpdated: '.video.status',
+    layerUpdated: '.layer.updated',
 } as const;
 
 export type RemoteCommand = 'capture' | 'interval-start' | 'interval-stop';
@@ -30,4 +31,8 @@ export interface VideoStatusUpdatedEvent {
     url: string | null;
     downloadUrl: string | null;
     error: string | null;
+}
+
+export interface LayerUpdatedEvent {
+    layerCount: number;
 }
