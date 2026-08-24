@@ -167,6 +167,7 @@ it('stores a client-rendered video upload as completed', function () {
 
     expect($video->status)->toBe(VideoStatus::Completed)
         ->and($video->fps)->toBe(24)
+        ->and($video->has_audio)->toBeFalse()
         ->and($video->path)->not->toBeNull();
 
     Storage::assertExists($video->path);

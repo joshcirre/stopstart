@@ -16,7 +16,7 @@ class CaptureController extends Controller
     {
         $this->authorizeOwner($request, $project);
 
-        $latestVideo = $project->latestVideo;
+        $latestVideo = $project->latestMasterVideo;
 
         return Inertia::render('projects/Capture', [
             'project' => [

@@ -21,7 +21,7 @@ class ProjectController extends Controller
     {
         $projects = Project::ownedBy(OwnerToken::from($request))
             ->withCount('frames')
-            ->with(['latestFrame', 'latestVideo'])
+            ->with(['latestFrame', 'latestMasterVideo'])
             ->latest()
             ->get();
 
@@ -33,7 +33,7 @@ class ProjectController extends Controller
                 'fps' => $project->fps,
                 'frameCount' => $project->frames_count,
                 'latestFrameThumbnailUrl' => $project->latestFrame?->thumbnailUrl(),
-                'videoStatus' => $project->latestVideo?->status->value,
+                'videoStatus' => $project->latestMasterVideo?->status->value,
             ]),
         ]);
     }
@@ -68,7 +68,10 @@ class ProjectController extends Controller
                     'imageUrl' => route('projects.frames.image', [$project, $frame]),
                 ]),
             'frameCount' => $project->frames()->count(),
-            'video' => $this->videoProps($project->latestVideo),
+            'video' => $this->videoProps($project->latestMasterVideo),
+            'export' => $this->videoProps($project->latestExport),
+            'layerCount' => $project->audioLayers()->count(),
+            'dubUrl' => route('remote.dub', $project),
         ]);
     }
 

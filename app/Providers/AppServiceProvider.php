@@ -43,6 +43,22 @@ class AppServiceProvider extends ServiceProvider
                 $project instanceof Project ? 'remote:'.$project->id : $request->ip()
             );
         });
+
+        RateLimiter::for('dub-layers', function (Request $request): Limit {
+            $project = $request->route('project');
+
+            return Limit::perMinute(30)->by(
+                $project instanceof Project ? 'dub-layers:'.$project->id : $request->ip()
+            );
+        });
+
+        RateLimiter::for('dub-exports', function (Request $request): Limit {
+            $project = $request->route('project');
+
+            return Limit::perMinute(6)->by(
+                $project instanceof Project ? 'dub-exports:'.$project->id : $request->ip()
+            );
+        });
     }
 
     /**

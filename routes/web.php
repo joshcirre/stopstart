@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AudioLayerController;
 use App\Http\Controllers\CaptureController;
+use App\Http\Controllers\DubController;
 use App\Http\Controllers\FrameController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RemoteController;
@@ -27,3 +29,16 @@ Route::get('/remote/{project:remote_token}', [RemoteController::class, 'show'])-
 Route::post('/remote/{project:remote_token}/command', [RemoteController::class, 'command'])
     ->middleware('throttle:remote-commands')
     ->name('remote.command');
+
+Route::get('/remote/{project:remote_token}/dub', [DubController::class, 'show'])->name('remote.dub');
+Route::get('/remote/{project:remote_token}/videos/{video}/stream', [DubController::class, 'streamVideo'])->name('remote.videos.stream');
+Route::post('/remote/{project:remote_token}/export', [DubController::class, 'export'])
+    ->middleware('throttle:dub-exports')
+    ->name('remote.export');
+
+Route::post('/remote/{project:remote_token}/layers', [AudioLayerController::class, 'store'])
+    ->middleware('throttle:dub-layers')
+    ->name('remote.layers.store');
+Route::patch('/remote/{project:remote_token}/layers/{audioLayer}', [AudioLayerController::class, 'update'])->name('remote.layers.update');
+Route::delete('/remote/{project:remote_token}/layers/{audioLayer}', [AudioLayerController::class, 'destroy'])->name('remote.layers.destroy');
+Route::get('/remote/{project:remote_token}/layers/{audioLayer}/audio', [AudioLayerController::class, 'audio'])->name('remote.layers.audio');

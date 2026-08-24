@@ -42,6 +42,15 @@ class VideoFactory extends Factory
         ]);
     }
 
+    public function export(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => VideoStatus::Completed,
+            'has_audio' => true,
+            'path' => 'projects/1/videos/'.fake()->uuid().'.mp4',
+        ]);
+    }
+
     public function failed(): static
     {
         return $this->state(fn (array $attributes) => [

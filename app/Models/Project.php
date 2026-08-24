@@ -26,8 +26,10 @@ use Illuminate\Support\Str;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Frame> $frames
  * @property-read Collection<int, Video> $videos
+ * @property-read Collection<int, AudioLayer> $audioLayers
  * @property-read Frame|null $latestFrame
- * @property-read Video|null $latestVideo
+ * @property-read Video|null $latestMasterVideo
+ * @property-read Video|null $latestExport
  * @property-read int|null $frames_count
  */
 #[Fillable(['name', 'orientation', 'fps', 'owner_token', 'remote_token'])]
@@ -94,11 +96,36 @@ class Project extends Model
     }
 
     /**
+     * @return HasMany<AudioLayer, $this>
+     */
+    public function audioLayers(): HasMany
+    {
+        return $this->hasMany(AudioLayer::class);
+    }
+
+    /**
+     * The latest silent render — the working master the dub workspace
+     * records against. Exports (has_audio = true) never shadow it.
+     *
      * @return HasOne<Video, $this>
      */
-    public function latestVideo(): HasOne
+    public function latestMasterVideo(): HasOne
     {
-        return $this->hasOne(Video::class)->latestOfMany();
+        return $this->hasOne(Video::class)->ofMany(
+            ['id' => 'max'],
+            fn (Builder $query) => $query->where('has_audio', false),
+        );
+    }
+
+    /**
+     * @return HasOne<Video, $this>
+     */
+    public function latestExport(): HasOne
+    {
+        return $this->hasOne(Video::class)->ofMany(
+            ['id' => 'max'],
+            fn (Builder $query) => $query->where('has_audio', true),
+        );
     }
 
     public function channelName(): string

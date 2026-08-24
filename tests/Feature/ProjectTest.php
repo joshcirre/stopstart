@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AudioLayer;
 use App\Models\Frame;
 use App\Models\Project;
 use App\Models\Video;
@@ -74,9 +75,11 @@ it('deletes a project along with its stored files', function () {
     $project = Project::factory()->create();
     Frame::factory()->for($project)->create(['path' => "projects/{$project->id}/frames/a.jpg"]);
     Video::factory()->for($project)->completed()->create(['path' => "projects/{$project->id}/videos/v.mp4"]);
+    AudioLayer::factory()->for($project)->create(['path' => "projects/{$project->id}/audio-layers/l.webm"]);
 
     Storage::put("projects/{$project->id}/frames/a.jpg", 'jpg');
     Storage::put("projects/{$project->id}/videos/v.mp4", 'mp4');
+    Storage::put("projects/{$project->id}/audio-layers/l.webm", 'audio');
 
     $this->withCookie('owner_token', $project->owner_token)
         ->delete(route('projects.destroy', $project))
@@ -84,10 +87,12 @@ it('deletes a project along with its stored files', function () {
 
     Storage::assertMissing("projects/{$project->id}/frames/a.jpg");
     Storage::assertMissing("projects/{$project->id}/videos/v.mp4");
+    Storage::assertMissing("projects/{$project->id}/audio-layers/l.webm");
 
     $this->assertDatabaseEmpty('projects');
     $this->assertDatabaseEmpty('frames');
     $this->assertDatabaseEmpty('videos');
+    $this->assertDatabaseEmpty('audio_layers');
 });
 
 it('shares the remote pairing url and channel data on the capture page', function () {

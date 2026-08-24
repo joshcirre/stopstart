@@ -1,8 +1,10 @@
 <?php
 
+use App\Events\AudioLayerUpdated;
 use App\Events\FrameCaptured;
 use App\Events\RemoteCommandReceived;
 use App\Events\VideoStatusUpdated;
+use App\Models\AudioLayer;
 use App\Models\Frame;
 use App\Models\Project;
 use App\Models\Video;
@@ -35,6 +37,16 @@ it('broadcasts captured frames with count and thumbnail', function () {
         ->and($payload['sequence'])->toBe($frame->sequence)
         ->and($payload['frameCount'])->toBe(1)
         ->and($payload['thumbnailUrl'])->toBeString();
+});
+
+it('broadcasts layer updates with the layer count', function () {
+    $layer = AudioLayer::factory()->create();
+
+    $event = new AudioLayerUpdated($layer->project);
+
+    expect($event->broadcastOn()[0]->name)->toBe($layer->project->channelName())
+        ->and($event->broadcastAs())->toBe('layer.updated')
+        ->and($event->broadcastWith())->toBe(['layerCount' => 1]);
 });
 
 it('broadcasts video status with urls only when completed', function () {

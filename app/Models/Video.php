@@ -16,13 +16,14 @@ use Illuminate\Support\Facades\Storage;
  * @property int $project_id
  * @property VideoStatus $status
  * @property int $fps
+ * @property bool $has_audio
  * @property string|null $path
  * @property string|null $error
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Project $project
  */
-#[Fillable(['project_id', 'status', 'fps', 'path', 'error'])]
+#[Fillable(['project_id', 'status', 'fps', 'path', 'error', 'has_audio'])]
 class Video extends Model
 {
     /** @use HasFactory<VideoFactory> */
@@ -42,6 +43,7 @@ class Video extends Model
         return [
             'status' => VideoStatus::class,
             'fps' => 'integer',
+            'has_audio' => 'boolean',
         ];
     }
 
