@@ -67,7 +67,9 @@
         <Form action={store()} resetOnSuccess>
             {#snippet children({ errors, processing })}
                 <div class="flex flex-wrap items-end gap-4 sm:gap-6">
-                    <label class="flex min-w-48 flex-1 flex-col gap-1.5">
+                    <label
+                        class="flex min-w-0 flex-1 basis-full flex-col gap-1.5 sm:min-w-48 sm:basis-0"
+                    >
                         <span class={microLabel}>NAME</span>
                         <input
                             type="text"
@@ -92,7 +94,7 @@
                                     class="peer sr-only"
                                 />
                                 <span
-                                    class="flex flex-col border border-zinc-300 px-3 py-1.5 text-sm peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white dark:border-zinc-700 dark:peer-checked:border-zinc-100 dark:peer-checked:bg-zinc-100 dark:peer-checked:text-zinc-900"
+                                    class="flex flex-col justify-center border border-zinc-300 px-3 py-1.5 text-sm peer-checked:border-zinc-900 peer-checked:bg-zinc-900 peer-checked:text-white pointer-coarse:min-h-12 dark:border-zinc-700 dark:peer-checked:border-zinc-100 dark:peer-checked:bg-zinc-100 dark:peer-checked:text-zinc-900"
                                 >
                                     {option.label}
                                     <span
@@ -152,7 +154,7 @@
                 {#each projects as project (project.id)}
                     <div
                         class={cn(
-                            'border-l-4 bg-white shadow-sm transition-colors duration-200 dark:bg-zinc-900',
+                            'min-w-0 border-l-4 bg-white shadow-sm transition-colors duration-200 dark:bg-zinc-900',
                             railFor(project),
                         )}
                     >
@@ -195,7 +197,7 @@
                                     : 'PORTRAIT'}
                             </p>
 
-                            <div class="flex items-center gap-3 pt-1">
+                            <div class="flex flex-wrap items-center gap-3 pt-1">
                                 <Link
                                     href={capture(project.id)}
                                     class={cn(btnPrimary, 'px-3 py-1.5')}

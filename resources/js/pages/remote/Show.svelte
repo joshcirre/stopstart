@@ -78,22 +78,22 @@
 <AppHead title={`Remote – ${projectName}`} />
 
 <div
-    class="dark flex min-h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100 select-none"
+    class="dark flex min-h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-zinc-100 select-none"
 >
-    <header class="flex items-center justify-between px-5 py-4">
-        <div>
+    <header class="flex items-center justify-between gap-3 px-5 py-4">
+        <div class="min-w-0">
             <p class="font-mono text-[10px] tracking-[0.25em] text-zinc-500">
                 REMOTE
             </p>
-            <h1 class="font-display text-lg leading-snug font-bold">
+            <h1 class="truncate font-display text-lg leading-snug font-bold">
                 {projectName}
             </h1>
         </div>
 
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex shrink-0 items-center gap-2 text-sm">
             <span
                 class={cn(
-                    'h-2.5 w-2.5 rounded-full',
+                    'h-2.5 w-2.5 shrink-0 rounded-full',
                     connected
                         ? 'animate-pulse bg-emerald-400'
                         : connection.state === 'connecting'
@@ -111,7 +111,7 @@
         </div>
     </header>
 
-    <main class="grid flex-1 place-items-center px-6">
+    <main class="grid flex-1 place-items-center px-6 py-6">
         <ShutterButton
             size="xl"
             disabled={!connected || commandRequest.processing}
@@ -120,11 +120,12 @@
     </main>
 
     <footer class="space-y-4 px-5 pb-6">
-        <div class="flex items-center justify-center gap-3">
+        <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             <select
                 bind:value={intervalSeconds}
                 disabled={intervalRunning}
-                class="min-h-11 touch-manipulation border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-zinc-200 disabled:opacity-50"
+                aria-label="Capture interval"
+                class="min-h-11 touch-manipulation border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-base text-zinc-200 disabled:opacity-50 sm:text-xs pointer-coarse:min-h-12 pointer-coarse:text-base"
             >
                 {#each INTERVAL_CHOICES as seconds (seconds)}
                     <option value={seconds}>every {seconds}s</option>
@@ -136,7 +137,7 @@
                 disabled={!connected}
                 onclick={toggleInterval}
                 class={cn(
-                    'min-h-11 touch-manipulation border px-5 py-2 font-mono text-xs tracking-[0.15em] transition-colors duration-200 disabled:opacity-40',
+                    'min-h-11 touch-manipulation border px-3 py-2 font-mono text-xs tracking-[0.15em] transition-colors duration-200 disabled:opacity-40 sm:px-5 pointer-coarse:min-h-12',
                     intervalRunning
                         ? 'border-red-500 bg-red-500/10 text-red-400'
                         : 'border-zinc-600 text-zinc-200',
@@ -148,11 +149,16 @@
 
         <div
             class={cn(
-                'flex items-center justify-between border-l-4 bg-zinc-900 p-4',
+                'flex items-center justify-between gap-3 border-l-4 bg-zinc-900 p-4',
                 connected ? 'border-emerald-500' : 'border-zinc-700',
             )}
         >
-            <div class={cn('h-16 overflow-hidden bg-zinc-800', aspectClass)}>
+            <div
+                class={cn(
+                    'h-16 shrink-0 overflow-hidden bg-zinc-800',
+                    aspectClass,
+                )}
+            >
                 {#if thumbnailUrl}
                     <img
                         src={thumbnailUrl}
@@ -162,7 +168,7 @@
                 {/if}
             </div>
 
-            <div class="text-right">
+            <div class="min-w-0 text-right">
                 <p class="font-mono text-3xl font-semibold tabular-nums">
                     {frameCount}
                 </p>

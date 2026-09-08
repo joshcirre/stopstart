@@ -310,16 +310,16 @@
 <AppHead title={`Dub – ${projectName}`} />
 
 <div
-    class="dark flex min-h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100"
+    class="dark flex min-h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-zinc-100"
 >
-    <header class="flex items-center justify-between px-4 py-4 sm:px-6">
+    <header class="flex items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <div class="min-w-0">
             <p class={microLabel}>DUB WORKSPACE</p>
             <h1 class="truncate font-display text-lg leading-snug font-bold">
                 {projectName}
             </h1>
         </div>
-        <p class={microLabel}>
+        <p class={cn(microLabel, 'shrink-0 whitespace-nowrap')}>
             {layers.length}
             {layers.length === 1 ? 'LAYER' : 'LAYERS'}
         </p>
@@ -360,7 +360,7 @@
             <div class="flex items-center gap-3">
                 <button
                     type="button"
-                    class={btnGhostMono}
+                    class={cn(btnGhostMono, 'shrink-0')}
                     disabled={recording}
                     onclick={togglePlayback}
                 >
@@ -368,15 +368,16 @@
                 </button>
                 <input
                     type="range"
+                    aria-label="Playback position"
                     min="0"
                     max={videoDuration}
                     step="0.05"
                     value={currentTime}
                     disabled={recording}
                     oninput={seekTo}
-                    class="min-h-11 flex-1 accent-white"
+                    class="min-h-11 min-w-0 flex-1 accent-white pointer-coarse:min-h-12"
                 />
-                <span class={cn(microLabel, 'whitespace-nowrap')}>
+                <span class={cn(microLabel, 'shrink-0 whitespace-nowrap')}>
                     {currentTime.toFixed(1)}S / {videoDuration.toFixed(1)}S
                 </span>
             </div>
@@ -436,7 +437,7 @@
             </p>
 
             <section class="space-y-2">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     <h2 class={microLabel}>LAYERS</h2>
                     <button
                         type="button"
@@ -462,6 +463,7 @@
                             >
                                 <input
                                     type="text"
+                                    aria-label="Layer name"
                                     value={layer.name}
                                     disabled={busy}
                                     onchange={(event) =>
@@ -469,11 +471,11 @@
                                             layer,
                                             event.currentTarget.value,
                                         )}
-                                    class="min-w-0 flex-1 border-none bg-transparent text-sm font-medium focus:outline-none"
+                                    class="min-w-0 flex-1 border-none bg-transparent text-base font-medium focus:outline-none sm:text-sm pointer-coarse:min-h-12 pointer-coarse:text-base"
                                 />
                                 <button
                                     type="button"
-                                    class="font-mono text-xs text-red-400 transition-colors duration-200 hover:text-red-300"
+                                    class="shrink-0 touch-manipulation font-mono text-xs text-red-400 transition-colors duration-200 hover:text-red-300 pointer-coarse:min-h-12 pointer-coarse:min-w-12"
                                     disabled={busy}
                                     onclick={() => deleteLayer(layer)}
                                 >
@@ -484,24 +486,26 @@
                             <div
                                 class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2"
                             >
-                                <div class="flex items-center gap-1.5">
+                                <div
+                                    class="flex min-w-0 max-w-full items-center gap-1.5"
+                                >
                                     <button
                                         type="button"
-                                        class={btnGhostMono}
+                                        class={cn(btnGhostMono, 'shrink-0')}
                                         disabled={busy}
                                         onclick={() => nudgeOffset(layer, -0.1)}
                                     >
                                         −0.1S
                                     </button>
                                     <span
-                                        class="font-mono text-xs text-zinc-400 tabular-nums"
+                                        class="min-w-0 text-center font-mono text-xs text-zinc-400 tabular-nums"
                                     >
                                         AT {layer.offset.toFixed(1)}S ·
                                         {layer.duration.toFixed(1)}S
                                     </span>
                                     <button
                                         type="button"
-                                        class={btnGhostMono}
+                                        class={cn(btnGhostMono, 'shrink-0')}
                                         disabled={busy}
                                         onclick={() => nudgeOffset(layer, 0.1)}
                                     >
@@ -527,7 +531,7 @@
                                                     event.currentTarget.value,
                                                 ),
                                             )}
-                                        class="min-h-8 flex-1 accent-white"
+                                        class="min-h-8 min-w-0 flex-1 accent-white pointer-coarse:min-h-12"
                                     />
                                 </label>
                             </div>
@@ -539,7 +543,7 @@
             <section
                 class="space-y-3 border-l-4 border-emerald-500 bg-zinc-900 p-4"
             >
-                <div class="flex items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 class={microLabel}>EXPORT</h2>
                     <button
                         type="button"
@@ -578,7 +582,7 @@
                     ></video>
                     <a
                         href={dubExport.url}
-                        class="inline-block font-mono text-xs underline underline-offset-4 hover:text-zinc-300"
+                        class="inline-flex touch-manipulation items-center font-mono text-xs underline underline-offset-4 hover:text-zinc-300 pointer-coarse:min-h-12"
                     >
                         SAVE MP4
                     </a>

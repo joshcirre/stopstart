@@ -56,7 +56,10 @@
     </span>
 {/snippet}
 
-<div bind:this={container} class="flex gap-1.5 overflow-x-auto px-1 py-2">
+<div
+    bind:this={container}
+    class="flex min-w-0 gap-1.5 overflow-x-auto overscroll-x-contain px-1 py-2 pointer-coarse:gap-3 pointer-coarse:px-2"
+>
     {#each frames as frame (frame.key)}
         {#if onselect}
             <button
@@ -66,12 +69,16 @@
                 disabled={frame.id === undefined}
                 onclick={() => onselect(frame)}
                 class={cn(
-                    'relative h-16 shrink-0 touch-manipulation overflow-hidden ring-2 disabled:opacity-40',
+                    'relative h-16 shrink-0 touch-manipulation ring-2 disabled:opacity-40',
                     aspectClass,
                     ringFor(frame),
                 )}
             >
                 {@render thumbnail(frame)}
+                <span
+                    class="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
+                    aria-hidden="true"
+                ></span>
             </button>
         {:else}
             <div

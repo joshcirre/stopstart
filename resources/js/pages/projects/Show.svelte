@@ -225,7 +225,7 @@
                         value={project.fps}
                         disabled={renderer.busy || videoInFlight}
                         onchange={changeFps}
-                        class={cn(select, 'px-2 py-1 text-xs')}
+                        class={cn(select, 'px-2 py-1 sm:text-xs')}
                     >
                         {#each FPS_CHOICES as fps (fps)}
                             <option value={fps}>{fps}</option>
@@ -290,7 +290,7 @@
 
         {#if selectedRender}
             <div class="mt-5 space-y-3">
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
                     <StatusBadge
                         label={`${selectedRender.status} · ${selectedRender.fps} FPS`}
                         tone={selectedRender.status === 'completed'
@@ -303,7 +303,7 @@
                     />
                     {#if selectedRender.status === 'failed' && selectedRender.error}
                         <p
-                            class="font-mono text-xs text-red-600 dark:text-red-400"
+                            class="min-w-0 break-words font-mono text-xs text-red-600 dark:text-red-400"
                         >
                             {selectedRender.error}
                         </p>
@@ -327,7 +327,7 @@
                     {#if selectedRender.downloadUrl}
                         <a
                             href={selectedRender.downloadUrl}
-                            class="inline-block font-mono text-xs underline underline-offset-4 hover:text-zinc-600 dark:hover:text-zinc-300"
+                            class="inline-flex items-center font-mono text-xs underline underline-offset-4 hover:text-zinc-600 pointer-coarse:min-h-12 dark:hover:text-zinc-300"
                         >
                             DOWNLOAD MP4 ({selectedRender.fps} FPS)
                         </a>
@@ -349,7 +349,7 @@
                                 aria-pressed={selectedRender?.id === render.id}
                                 onclick={() => (selectedRenderId = render.id)}
                                 class={cn(
-                                    'flex w-full items-center gap-3 px-2 py-2 text-left transition-colors duration-200 hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                                    'flex w-full flex-wrap items-center gap-x-3 gap-y-2 px-2 py-2 text-left transition-colors duration-200 hover:bg-zinc-100 sm:flex-nowrap sm:gap-3 pointer-coarse:min-h-12 dark:hover:bg-zinc-800',
                                     selectedRender?.id === render.id &&
                                         'bg-zinc-100 dark:bg-zinc-800',
                                 )}
@@ -368,12 +368,14 @@
                                           : 'warning'}
                                 />
                                 <span
-                                    class="grow truncate font-mono text-[10px] tracking-[0.15em] text-zinc-400 dark:text-zinc-500"
+                                    class="order-last min-w-0 grow basis-full truncate font-mono text-[10px] tracking-[0.15em] text-zinc-400 sm:order-none sm:basis-auto dark:text-zinc-500"
                                 >
                                     {renderTime(render)}
                                 </span>
                                 {#if selectedRender?.id === render.id}
-                                    <span class={microLabel}>PLAYING</span>
+                                    <span class={cn(microLabel, 'shrink-0')}>
+                                        PLAYING
+                                    </span>
                                 {/if}
                             </button>
                         </li>
@@ -432,7 +434,7 @@
                 {#if dubExport.downloadUrl}
                     <a
                         href={dubExport.downloadUrl}
-                        class="inline-block font-mono text-xs underline underline-offset-4 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        class="inline-flex items-center font-mono text-xs underline underline-offset-4 hover:text-zinc-600 pointer-coarse:min-h-12 dark:hover:text-zinc-300"
                     >
                         DOWNLOAD MP4 WITH AUDIO
                     </a>
@@ -480,7 +482,7 @@
                     </button>
                     <button
                         type="button"
-                        class="border border-red-500 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-red-600 transition-colors duration-200 hover:bg-red-500/10 dark:text-red-400"
+                        class="border border-red-500 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-red-600 transition-colors duration-200 hover:bg-red-500/10 pointer-coarse:min-h-12 dark:text-red-400"
                         onclick={deleteSelectedFrame}
                     >
                         DELETE

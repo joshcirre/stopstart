@@ -253,19 +253,19 @@
 <AppHead title={`Capture – ${project.name}`} />
 
 <div
-    class="dark flex h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100 phone-landscape:flex-row phone-landscape:pt-0 phone-landscape:pb-0 phone-landscape:pl-[env(safe-area-inset-left)] phone-landscape:pr-[env(safe-area-inset-right)]"
+    class="dark relative flex h-dvh flex-col bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] text-zinc-100 portrait:max-sm:overflow-y-auto phone-landscape:flex-row phone-landscape:pt-0 phone-landscape:pb-0 phone-landscape:pl-[env(safe-area-inset-left)] phone-landscape:pr-[env(safe-area-inset-right)]"
 >
     <header
-        class="flex items-center justify-between gap-3 px-4 py-3 phone-landscape:absolute phone-landscape:inset-x-0 phone-landscape:top-0 phone-landscape:z-10 phone-landscape:bg-zinc-950/60 phone-landscape:py-1.5"
+        class="flex shrink-0 items-center justify-between gap-3 px-4 py-3 phone-landscape:absolute phone-landscape:left-[env(safe-area-inset-left)] phone-landscape:right-[env(safe-area-inset-right)] phone-landscape:top-0 phone-landscape:z-10 phone-landscape:bg-zinc-950/60 phone-landscape:py-1.5"
     >
         <Link
             href={show(project.id)}
-            class="font-mono text-xs text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+            class="flex min-w-0 items-center font-mono text-xs text-zinc-400 transition-colors duration-200 hover:text-zinc-100 pointer-coarse:min-h-12"
         >
-            ← {project.name}
+            <span class="truncate">← {project.name}</span>
         </Link>
 
-        <div class="flex items-center gap-3">
+        <div class="flex shrink-0 items-center gap-3">
             <span class="font-mono text-sm text-zinc-300 tabular-nums">
                 #{frameCount}
                 {#if uploader.inFlight}
@@ -274,7 +274,7 @@
             </span>
             <button
                 type="button"
-                class="border border-zinc-700 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500"
+                class="border border-zinc-700 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500 pointer-coarse:min-h-12"
                 onclick={() => (showPairing = !showPairing)}
             >
                 REMOTE
@@ -284,7 +284,7 @@
 
     {#if showPairing}
         <div
-            class="mx-4 mb-2 flex items-center gap-4 border-l-4 border-blue-500 bg-zinc-900 p-4"
+            class="mx-4 mb-2 flex shrink-0 items-center gap-4 border-l-4 border-blue-500 bg-zinc-900 p-4 portrait:max-sm:absolute portrait:max-sm:inset-x-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] portrait:max-sm:top-[calc(env(safe-area-inset-top)+4.5rem)] portrait:max-sm:z-20 portrait:max-sm:mx-0 portrait:max-sm:max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-5.5rem)] portrait:max-sm:overflow-y-auto phone-landscape:absolute phone-landscape:inset-x-[max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))] phone-landscape:top-16 phone-landscape:z-20 phone-landscape:mx-0 phone-landscape:max-h-[calc(100dvh-5rem)] phone-landscape:overflow-y-auto"
         >
             <QrCode value={remoteUrl} class="w-28 shrink-0" />
             <div class="min-w-0 space-y-2 text-sm">
@@ -296,7 +296,7 @@
                 </p>
                 <button
                     type="button"
-                    class="border border-zinc-700 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500"
+                    class="border border-zinc-700 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500 pointer-coarse:min-h-12"
                     onclick={() => {
                         void navigator.clipboard?.writeText(remoteUrl);
                         toast.success('Remote link copied');
@@ -309,7 +309,7 @@
     {/if}
 
     <main
-        class="grid min-h-0 flex-1 place-items-center px-4 phone-landscape:min-w-0 phone-landscape:px-0"
+        class="grid min-h-0 min-w-0 flex-1 place-items-center px-4 portrait:max-sm:min-h-32 phone-landscape:px-0"
     >
         <CameraPreview
             {camera}
@@ -328,9 +328,11 @@
     </main>
 
     {#if camera.devices.length > 1}
-        <div class="flex justify-center px-4 pt-2 phone-landscape:hidden">
+        <div
+            class="flex shrink-0 justify-center px-4 pt-2 phone-landscape:hidden"
+        >
             <select
-                class="border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-300"
+                class="min-w-0 max-w-full border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-base text-zinc-300 sm:text-xs pointer-coarse:min-h-12 pointer-coarse:text-base"
                 value={camera.activeDeviceId}
                 onchange={(event) =>
                     void camera.switchTo(event.currentTarget.value)}
@@ -345,19 +347,21 @@
     {/if}
 
     <footer
-        class="space-y-1 px-4 pt-3 pb-2 phone-landscape:flex phone-landscape:w-48 phone-landscape:shrink-0 phone-landscape:flex-col phone-landscape:justify-center phone-landscape:space-y-4 phone-landscape:overflow-y-auto phone-landscape:px-3 phone-landscape:py-2"
+        class="min-w-0 shrink-0 space-y-1 px-4 pt-3 pb-2 phone-landscape:flex phone-landscape:w-48 phone-landscape:flex-col phone-landscape:space-y-4 phone-landscape:overflow-y-auto phone-landscape:px-3 phone-landscape:pt-16 phone-landscape:pb-2"
     >
         <div
-            class="flex items-center justify-between gap-4 phone-landscape:flex-col phone-landscape:justify-center phone-landscape:gap-5"
+            class="flex items-center justify-between gap-2 sm:gap-4 phone-landscape:my-auto phone-landscape:flex-col phone-landscape:justify-center phone-landscape:gap-5"
         >
-            <div class="flex w-40 flex-col gap-1 phone-landscape:items-center">
+            <div
+                class="flex min-w-0 flex-1 flex-col gap-1 sm:w-40 sm:flex-none phone-landscape:w-40 phone-landscape:flex-none phone-landscape:items-center"
+            >
                 <label
-                    class="flex items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-400"
+                    class="flex items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-400 pointer-coarse:min-h-12"
                 >
                     <input
                         type="checkbox"
                         bind:checked={onionSkinEnabled}
-                        class="accent-white"
+                        class="shrink-0 accent-white pointer-coarse:size-5"
                     />
                     ONION SKIN
                 </label>
@@ -368,11 +372,12 @@
                     step="0.05"
                     bind:value={onionSkinOpacity}
                     disabled={!onionSkinEnabled}
-                    class="accent-white disabled:opacity-30"
+                    aria-label="Onion skin opacity"
+                    class="min-w-0 w-full accent-white disabled:opacity-30 pointer-coarse:min-h-12"
                 />
                 {#if camera.zoomRange}
                     <label
-                        class="mt-1 flex w-full items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-400"
+                        class="mt-1 flex w-full flex-wrap items-center gap-2 font-mono text-[10px] tracking-[0.25em] text-zinc-400"
                     >
                         ZOOM
                         <input
@@ -385,24 +390,26 @@
                                 void camera.setZoom(
                                     Number(event.currentTarget.value),
                                 )}
-                            class="flex-1 accent-white"
+                            class="min-w-12 flex-1 accent-white pointer-coarse:min-h-12"
                         />
                     </label>
                 {/if}
             </div>
 
-            <ShutterButton
-                onpress={() => void captureFrame()}
-                disabled={camera.status !== 'active'}
-            />
+            <div class="shrink-0">
+                <ShutterButton
+                    onpress={() => void captureFrame()}
+                    disabled={camera.status !== 'active'}
+                />
+            </div>
 
             <div
-                class="flex w-40 flex-col items-end gap-1.5 phone-landscape:items-center"
+                class="flex w-28 shrink-0 flex-col items-end gap-1.5 sm:w-40 phone-landscape:w-40 phone-landscape:items-center"
             >
                 <select
                     bind:value={timer.intervalSeconds}
                     disabled={timer.running}
-                    class="border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-xs text-zinc-300 disabled:opacity-50"
+                    class="min-w-0 max-w-full border border-zinc-700 bg-zinc-900 px-2 py-1 font-mono text-base text-zinc-300 disabled:opacity-50 sm:text-xs pointer-coarse:min-h-12 pointer-coarse:text-base"
                 >
                     {#each INTERVAL_CHOICES as seconds (seconds)}
                         <option value={seconds}>every {seconds}s</option>
@@ -412,7 +419,7 @@
                     type="button"
                     disabled={videoInFlight || camera.status !== 'active'}
                     onclick={toggleInterval}
-                    class="border px-4 py-1.5 font-mono text-xs tracking-[0.15em] transition-colors duration-200 disabled:opacity-40 {timer.running
+                    class="max-w-full border px-2 py-1.5 font-mono text-xs tracking-[0.15em] transition-colors duration-200 disabled:opacity-40 sm:px-4 pointer-coarse:min-h-12 {timer.running
                         ? 'border-red-500 bg-red-500/10 text-red-400'
                         : 'border-zinc-600 text-zinc-200'}"
                 >
@@ -441,7 +448,7 @@
                     </span>
                     <button
                         type="button"
-                        class="border border-zinc-700 px-2 py-0.5 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500"
+                        class="border border-zinc-700 px-2 py-0.5 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500 pointer-coarse:min-h-12"
                         onclick={() => (insertAfterFrameId = null)}
                     >
                         SHOOT AT END

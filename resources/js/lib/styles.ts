@@ -61,29 +61,29 @@ export const hairlineFill = cn('h-full transition-all duration-700');
 // ── Buttons (square) ───────────────────────────────────────────────────
 
 export const btnPrimary = cn(
-    'bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white',
+    'touch-manipulation bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-zinc-700 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white pointer-coarse:inline-flex pointer-coarse:min-h-12 pointer-coarse:items-center pointer-coarse:justify-center',
 );
 
 export const btnGhost = cn(
-    'border border-zinc-300 px-3 py-1.5 text-sm text-zinc-600 transition-colors duration-200 hover:border-zinc-500 hover:text-zinc-900 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-100',
+    'touch-manipulation border border-zinc-300 px-3 py-1.5 text-sm text-zinc-600 transition-colors duration-200 hover:border-zinc-500 hover:text-zinc-900 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-zinc-100 pointer-coarse:inline-flex pointer-coarse:min-h-12 pointer-coarse:items-center pointer-coarse:justify-center',
 );
 
 export const btnGhostMono = cn(
-    'border border-zinc-300 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-600 transition-colors duration-200 hover:border-zinc-500 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500',
+    'touch-manipulation border border-zinc-300 px-3 py-1 font-mono text-[10px] tracking-[0.25em] text-zinc-600 transition-colors duration-200 hover:border-zinc-500 disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 pointer-coarse:inline-flex pointer-coarse:min-h-12 pointer-coarse:items-center pointer-coarse:justify-center',
 );
 
 export const btnIcon = cn(
-    'p-1 text-zinc-400 transition-colors duration-200 hover:text-zinc-600 dark:hover:text-zinc-300',
+    'relative shrink-0 touch-manipulation p-1 text-zinc-400 transition-colors duration-200 hover:text-zinc-600 dark:hover:text-zinc-300',
 );
 
 export const btnDangerText = cn(
-    'font-mono text-xs text-red-600 transition-colors duration-200 hover:text-red-500 dark:text-red-400',
+    'touch-manipulation font-mono text-xs text-red-600 transition-colors duration-200 hover:text-red-500 dark:text-red-400 pointer-coarse:inline-flex pointer-coarse:min-h-12 pointer-coarse:min-w-12 pointer-coarse:items-center pointer-coarse:justify-center',
 );
 
 // ── Form controls (square) ─────────────────────────────────────────────
 
 export const input = cn(
-    'border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-400',
+    'min-w-0 border border-zinc-300 bg-white px-3 py-2 text-base focus:border-zinc-500 focus:outline-none sm:text-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:border-zinc-400 pointer-coarse:min-h-12 pointer-coarse:text-base',
 );
 
 export const select = input;

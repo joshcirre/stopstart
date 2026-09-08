@@ -75,7 +75,7 @@
 
     {#if camera.status !== 'active'}
         <div
-            class="absolute inset-0 grid place-items-center bg-zinc-950/90 p-6 text-center text-zinc-300"
+            class="absolute inset-0 grid place-items-center overflow-y-auto bg-zinc-950/90 p-4 text-center text-zinc-300 sm:p-6"
         >
             {#if camera.status === 'starting' || camera.status === 'idle'}
                 <p class={cn(emptyState, 'animate-pulse')}>STARTING CAMERA</p>
@@ -87,7 +87,7 @@
                     </p>
                     <button
                         type="button"
-                        class="bg-white px-4 py-1.5 text-sm font-medium text-zinc-900"
+                        class="bg-white px-4 py-1.5 text-sm font-medium text-zinc-900 pointer-coarse:min-h-12"
                         onclick={() => void camera.start()}
                     >
                         Retry
@@ -101,7 +101,7 @@
                     {#if camera.status === 'error'}
                         <button
                             type="button"
-                            class="bg-white px-4 py-1.5 text-sm font-medium text-zinc-900"
+                            class="bg-white px-4 py-1.5 text-sm font-medium text-zinc-900 pointer-coarse:min-h-12"
                             onclick={() => void camera.start()}
                         >
                             Retry

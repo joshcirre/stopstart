@@ -9,7 +9,7 @@
 </script>
 
 <div
-    class="min-h-dvh bg-stone-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+    class="min-h-dvh bg-stone-100 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
 >
     <header
         class="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
@@ -19,8 +19,12 @@
         >
             <Link
                 href={index()}
-                class="font-mono text-xs font-bold tracking-[0.25em]"
+                class="relative touch-manipulation font-mono text-xs font-bold tracking-[0.25em]"
             >
+                <span
+                    class="absolute top-1/2 left-0 h-12 w-full -translate-y-1/2 pointer-fine:hidden"
+                    aria-hidden="true"
+                ></span>
                 STOPSTART
             </Link>
 
