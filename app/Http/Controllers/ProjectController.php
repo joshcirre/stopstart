@@ -70,6 +70,12 @@ class ProjectController extends Controller
                 ]),
             'frameCount' => $project->frames()->count(),
             'video' => $this->videoProps($project->latestMasterVideo),
+            'renders' => $project->videos()
+                ->where('has_audio', false)
+                ->latest('id')
+                ->get()
+                ->map(fn (Video $video): array => $this->videoProps($video))
+                ->all(),
             'export' => $this->videoProps($project->latestExport),
             'layerCount' => $project->audioLayers()->count(),
             'dubUrl' => route('remote.dub', $project),
@@ -114,9 +120,11 @@ class ProjectController extends Controller
         return [
             'id' => $video->id,
             'status' => $video->status->value,
+            'fps' => $video->fps,
             'url' => $video->url(),
             'downloadUrl' => $video->url() !== null ? route('videos.download', $video) : null,
             'error' => $video->error,
+            'createdAt' => $video->created_at?->toIso8601String(),
         ];
     }
 }

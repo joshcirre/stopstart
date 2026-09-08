@@ -4,7 +4,15 @@ import type { FrameStoreResponse } from '@/types/models';
 interface QueuedUpload {
     key: string;
     blob: Blob;
+    fields?: ExtraFields;
 }
+
+/**
+ * Resolved immediately before the request is sent rather than at enqueue
+ * time. Uploads drain strictly in order, so an insert can anchor itself to
+ * the frame the previous upload just created.
+ */
+type ExtraFields = () => Record<string, string>;
 
 /**
  * Uploads captured frames sequentially in the background so rapid or
@@ -28,8 +36,8 @@ export class FrameUploader {
         private readonly onFailed: (key: string, message: string) => void,
     ) {}
 
-    enqueue(key: string, blob: Blob): void {
-        this.#queue.push({ key, blob });
+    enqueue(key: string, blob: Blob, fields?: ExtraFields): void {
+        this.#queue.push({ key, blob, fields });
         this.pendingCount = this.#queue.length + (this.#draining ? 1 : 0);
 
         void this.#drain();
@@ -60,6 +68,12 @@ export class FrameUploader {
         try {
             const formData = new FormData();
             formData.append('image', upload.blob, 'frame.jpg');
+
+            for (const [name, value] of Object.entries(
+                upload.fields?.() ?? {},
+            )) {
+                formData.append(name, value);
+            }
 
             const response = await http.getClient().request({
                 method: 'post',

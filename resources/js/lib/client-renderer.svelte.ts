@@ -49,11 +49,15 @@ export class ClientRenderer {
     constructor(
         private readonly width: number,
         private readonly height: number,
-        private readonly fps: number,
         private readonly uploadUrl: string,
     ) {}
 
-    async render(frames: Frame[]): Promise<Video | null> {
+    /**
+     * `fps` is passed per render rather than held on the instance: the
+     * renderer outlives fps changes (Inertia re-renders this page in
+     * place), so a cached rate would silently encode at the old value.
+     */
+    async render(frames: Frame[], fps: number): Promise<Video | null> {
         if (this.busy || frames.length === 0) {
             return null;
         }
@@ -62,7 +66,7 @@ export class ClientRenderer {
 
         try {
             const blobs = await this.fetchFrames(frames);
-            const file = await this.encode(blobs);
+            const file = await this.encode(blobs, fps);
             const video = await this.upload(file);
 
             this.phase = 'done';
@@ -98,7 +102,7 @@ export class ClientRenderer {
         return blobs;
     }
 
-    private async encode(blobs: Blob[]): Promise<Blob> {
+    private async encode(blobs: Blob[], fps: number): Promise<Blob> {
         this.phase = 'encoding';
         this.progress = 0;
 
@@ -119,7 +123,7 @@ export class ClientRenderer {
             target: new BufferTarget(),
         });
 
-        output.addVideoTrack(source, { frameRate: this.fps });
+        output.addVideoTrack(source, { frameRate: fps });
 
         await output.start();
 
@@ -131,7 +135,7 @@ export class ClientRenderer {
             context.drawImage(bitmap, 0, 0, this.width, this.height);
             bitmap.close();
 
-            await source.add(index / this.fps, 1 / this.fps);
+            await source.add(index / fps, 1 / fps);
             this.progress = (index + 1) / blobs.length;
         }
 

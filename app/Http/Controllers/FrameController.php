@@ -32,13 +32,38 @@ class FrameController extends Controller
 
         abort_if($path === false, 500, 'Unable to store the captured frame.');
 
+        $afterFrameId = $request->integer('after_frame_id') ?: null;
+        $shifted = false;
+
         // The lock serializes sequence assignment under rapid captures; the
         // unique [project_id, sequence] index is the backstop.
         $frame = Cache::lock("project:{$project->id}:frame-sequence", 10)
-            ->block(5, fn (): Frame => $project->frames()->create([
-                'sequence' => ((int) $project->frames()->max('sequence')) + 1,
-                'path' => $path,
-            ]));
+            ->block(5, function () use ($project, $path, $afterFrameId, &$shifted): Frame {
+                if ($afterFrameId === null) {
+                    return $project->frames()->create([
+                        'sequence' => ((int) $project->frames()->max('sequence')) + 1,
+                        'path' => $path,
+                    ]);
+                }
+
+                return DB::transaction(function () use ($project, $path, $afterFrameId, &$shifted): Frame {
+                    $anchor = $project->frames()->whereKey($afterFrameId)->firstOrFail();
+                    $sequence = $anchor->sequence + 1;
+
+                    // A deleted frame may already have left this slot open,
+                    // in which case nothing below it has to move.
+                    $shifted = $project->frames()->where('sequence', $sequence)->exists();
+
+                    if ($shifted) {
+                        $this->shiftFramesDown($project, $sequence);
+                    }
+
+                    return $project->frames()->create([
+                        'sequence' => $sequence,
+                        'path' => $path,
+                    ]);
+                });
+            });
 
         broadcast(new FrameCaptured($frame));
 
@@ -49,7 +74,26 @@ class FrameController extends Controller
                 'thumbnailUrl' => $frame->thumbnailUrl(),
             ],
             'frameCount' => $project->frames()->count(),
+            'shifted' => $shifted,
         ], 201);
+    }
+
+    /**
+     * Opens a slot at $sequence by pushing that frame and everything after
+     * it one step later. The two-pass negation keeps every intermediate row
+     * out of the positive range, so the unique [project_id, sequence] index
+     * can never collide mid-shift. Callers must already hold the project's
+     * frame-sequence lock.
+     */
+    private function shiftFramesDown(Project $project, int $sequence): void
+    {
+        $project->frames()
+            ->where('sequence', '>=', $sequence)
+            ->update(['sequence' => DB::raw('-(sequence + 1)')]);
+
+        $project->frames()
+            ->where('sequence', '<', 0)
+            ->update(['sequence' => DB::raw('-sequence')]);
     }
 
     /**

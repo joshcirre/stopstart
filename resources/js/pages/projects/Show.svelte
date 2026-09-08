@@ -38,7 +38,7 @@
         store as storeVideo,
         upload as uploadVideo,
     } from '@/routes/projects/videos';
-    import type { Frame, ProjectShowProps } from '@/types';
+    import type { Frame, ProjectShowProps, Video } from '@/types';
     import { FPS_CHOICES, ORIENTATION_DIMENSIONS } from '@/types';
 
     let {
@@ -46,6 +46,7 @@
         frames,
         frameCount,
         video,
+        renders,
         export: dubExport,
         layerCount,
         dubUrl,
@@ -71,7 +72,6 @@
             new ClientRenderer(
                 dimensions.width,
                 dimensions.height,
-                project.fps,
                 uploadVideo.url(project.id),
             ),
     );
@@ -83,14 +83,36 @@
     });
 
     async function renderInBrowser(): Promise<void> {
-        const rendered = await renderer.render(frames);
+        const rendered = await renderer.render(frames, project.fps);
 
         if (rendered) {
-            toast.success('Video rendered');
-            router.reload({ only: ['video'] });
+            toast.success(`Video rendered at ${project.fps} fps`);
+            selectedRenderId = null;
+            router.reload({ only: ['video', 'renders'] });
         } else if (renderer.errorMessage) {
             toast.error(renderer.errorMessage);
         }
+    }
+
+    // Null tracks "whatever is newest" so a fresh render surfaces on its
+    // own; picking an older render pins the player to that one.
+    let selectedRenderId = $state<number | null>(null);
+
+    const selectedRender = $derived(
+        renders.find((render) => render.id === selectedRenderId) ??
+            renders[0] ??
+            video,
+    );
+
+    function renderTime(render: Video): string {
+        return render.createdAt
+            ? new Date(render.createdAt).toLocaleString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+              })
+            : '';
     }
 
     const renderPhaseLabels = {
@@ -127,7 +149,7 @@
         subscribeToProjectChannel(project.remoteToken, {
             onFrameCaptured: throttledFrameReload,
             onVideoStatusUpdated: () =>
-                router.reload({ only: ['video', 'export'] }),
+                router.reload({ only: ['video', 'renders', 'export'] }),
             onLayerUpdated: () => router.reload({ only: ['layerCount'] }),
         }),
     );
@@ -266,46 +288,100 @@
             </div>
         {/if}
 
-        {#if video}
+        {#if selectedRender}
             <div class="mt-5 space-y-3">
                 <div class="flex items-center gap-2">
                     <StatusBadge
-                        label={video.status}
-                        tone={video.status === 'completed'
+                        label={`${selectedRender.status} · ${selectedRender.fps} FPS`}
+                        tone={selectedRender.status === 'completed'
                             ? 'success'
-                            : video.status === 'failed'
+                            : selectedRender.status === 'failed'
                               ? 'danger'
                               : 'warning'}
-                        pulse={videoInFlight}
+                        pulse={selectedRender.status === 'pending' ||
+                            selectedRender.status === 'processing'}
                     />
-                    {#if video.status === 'failed' && video.error}
+                    {#if selectedRender.status === 'failed' && selectedRender.error}
                         <p
                             class="font-mono text-xs text-red-600 dark:text-red-400"
                         >
-                            {video.error}
+                            {selectedRender.error}
                         </p>
                     {/if}
                 </div>
 
-                {#if video.status === 'completed' && video.url}
-                    <!-- svelte-ignore a11y_media_has_caption -->
-                    <video
-                        controls
-                        src={video.url}
-                        class={cn(
-                            'max-h-96 border border-zinc-200 bg-black dark:border-zinc-800',
-                            aspectClass,
-                        )}
-                    ></video>
-                    {#if video.downloadUrl}
+                {#if selectedRender.status === 'completed' && selectedRender.url}
+                    <!-- Keyed so switching renders swaps the source instead
+                         of leaving the previous one loaded. -->
+                    {#key selectedRender.id}
+                        <!-- svelte-ignore a11y_media_has_caption -->
+                        <video
+                            controls
+                            src={selectedRender.url}
+                            class={cn(
+                                'max-h-96 border border-zinc-200 bg-black dark:border-zinc-800',
+                                aspectClass,
+                            )}
+                        ></video>
+                    {/key}
+                    {#if selectedRender.downloadUrl}
                         <a
-                            href={video.downloadUrl}
+                            href={selectedRender.downloadUrl}
                             class="inline-block font-mono text-xs underline underline-offset-4 hover:text-zinc-600 dark:hover:text-zinc-300"
                         >
-                            DOWNLOAD MP4
+                            DOWNLOAD MP4 ({selectedRender.fps} FPS)
                         </a>
                     {/if}
                 {/if}
+            </div>
+        {/if}
+
+        {#if renders.length > 1}
+            <div class="mt-6 space-y-2">
+                <p class={microLabel}>
+                    RENDERS · <span class="tabular-nums">{renders.length}</span>
+                </p>
+                <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                    {#each renders as render (render.id)}
+                        <li>
+                            <button
+                                type="button"
+                                aria-pressed={selectedRender?.id === render.id}
+                                onclick={() => (selectedRenderId = render.id)}
+                                class={cn(
+                                    'flex w-full items-center gap-3 px-2 py-2 text-left transition-colors duration-200 hover:bg-zinc-100 dark:hover:bg-zinc-800',
+                                    selectedRender?.id === render.id &&
+                                        'bg-zinc-100 dark:bg-zinc-800',
+                                )}
+                            >
+                                <span
+                                    class="w-14 shrink-0 font-mono text-xs tabular-nums"
+                                >
+                                    {render.fps} FPS
+                                </span>
+                                <StatusBadge
+                                    label={render.status}
+                                    tone={render.status === 'completed'
+                                        ? 'success'
+                                        : render.status === 'failed'
+                                          ? 'danger'
+                                          : 'warning'}
+                                />
+                                <span
+                                    class="grow truncate font-mono text-[10px] tracking-[0.15em] text-zinc-400 dark:text-zinc-500"
+                                >
+                                    {renderTime(render)}
+                                </span>
+                                {#if selectedRender?.id === render.id}
+                                    <span class={microLabel}>PLAYING</span>
+                                {/if}
+                            </button>
+                        </li>
+                    {/each}
+                </ul>
+                <p class={cn(microLabel, 'text-zinc-400 dark:text-zinc-500')}>
+                    EACH RENDER IS KEPT — CHANGE FPS AND RENDER AGAIN TO ADD ONE
+                </p>
             </div>
         {/if}
     </section>

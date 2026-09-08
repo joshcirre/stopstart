@@ -4,6 +4,8 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
-| app/Http/Controllers/VideoController.php, app/Http/Controllers/{DubController,AudioLayerController}.php | .ai/rules/controllers.md |
+| app/Http/Controllers/VideoController.php, app/Http/Controllers/{DubController,AudioLayerController}.php, app/Http/Controllers/FrameController.php | .ai/rules/controllers.md |
 | app/Events/** | .ai/rules/events.md |
 | app/Jobs/** | .ai/rules/jobs.md |
+| resources/js/lib/*.svelte.ts | .ai/rules/lib.md |
+| app/Http/Requests/** | .ai/rules/requests.md |

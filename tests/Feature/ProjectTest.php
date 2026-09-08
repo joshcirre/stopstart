@@ -132,3 +132,45 @@ it('shares the remote pairing url and channel data on the capture page', functio
             ->where('project.height', 1080)
         );
 });
+
+it('keeps every master render in the show payload, tagged with its own fps', function () {
+    $project = Project::factory()->create(['fps' => 6]);
+
+    $twelve = Video::factory()->for($project)->completed()->create(['fps' => 12]);
+    $six = Video::factory()->for($project)->completed()->create(['fps' => 6]);
+    $export = Video::factory()->for($project)->export()->create(['fps' => 6]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->get(route('projects.show', $project))
+        ->assertInertia(fn ($page) => $page
+            ->component('projects/Show')
+            // Newest first, and the export is not a master render.
+            ->has('renders', 2)
+            ->where('renders.0.id', $six->id)
+            ->where('renders.0.fps', 6)
+            ->where('renders.1.id', $twelve->id)
+            ->where('renders.1.fps', 12)
+            ->where('video.id', $six->id)
+            ->where('video.fps', 6)
+            ->where('export.id', $export->id)
+            ->etc()
+        );
+});
+
+it('sends every frame to the capture page so any of them can anchor a resume', function () {
+    $project = Project::factory()->create();
+
+    foreach (range(1, 25) as $sequence) {
+        Frame::factory()->for($project)->create(['sequence' => $sequence]);
+    }
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->get(route('projects.capture', $project))
+        ->assertInertia(fn ($page) => $page
+            ->component('projects/Capture')
+            ->has('frames', 25)
+            ->where('frames.0.sequence', 1)
+            ->where('frames.24.sequence', 25)
+            ->etc()
+        );
+});

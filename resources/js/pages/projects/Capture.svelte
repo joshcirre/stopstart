@@ -46,6 +46,7 @@
         untrack(() =>
             frames.map((frame) => ({
                 key: `frame-${frame.id}`,
+                id: frame.id,
                 src: frame.thumbnailUrl,
                 sequence: frame.sequence,
             })),
@@ -56,8 +57,20 @@
     let onionSkinOpacity = $state(0.4);
     let flash = $state(false);
     let showPairing = $state(false);
+
+    // Null means "append to the end". Otherwise new frames are inserted
+    // straight after this frame, letting a shot be fixed or extended
+    // mid-sequence without restarting the project.
+    let insertAfterFrameId = $state<number | null>(null);
+
+    const insertAnchor = $derived(
+        insertAfterFrameId === null
+            ? null
+            : (strip.find((frame) => frame.id === insertAfterFrameId) ?? null),
+    );
+
     let nextClientSequence = $derived(
-        (strip.at(-1)?.sequence ?? frameCount) + 1,
+        (insertAnchor?.sequence ?? strip.at(-1)?.sequence ?? frameCount) + 1,
     );
 
     const uploader = new FrameUploader(
@@ -71,15 +84,37 @@
     const wakeLock = createWakeLock();
 
     const onionSkinSrc = $derived(
-        onionSkinEnabled ? (strip.at(-1)?.src ?? null) : null,
+        onionSkinEnabled ? ((insertAnchor ?? strip.at(-1))?.src ?? null) : null,
     );
 
     function onFrameUploaded(key: string, response: FrameStoreResponse): void {
         const entry = strip.find((frame) => frame.key === key);
 
+        // Mirror the server's shift so the strip keeps matching the stored
+        // ordering; the inserted frame itself must not be shifted.
+        if (response.shifted) {
+            for (const frame of strip) {
+                if (
+                    frame.key !== key &&
+                    frame.sequence >= response.frame.sequence
+                ) {
+                    frame.sequence += 1;
+                }
+            }
+        }
+
         if (entry) {
             entry.pending = false;
+            entry.id = response.frame.id;
             entry.sequence = response.frame.sequence;
+
+            strip.sort((a, b) => a.sequence - b.sequence);
+        }
+
+        // Chain the next insert onto the frame just created, so a burst of
+        // captures stays in order instead of stacking up in reverse.
+        if (insertAfterFrameId !== null) {
+            insertAfterFrameId = response.frame.id;
         }
 
         frameCount = response.frameCount;
@@ -115,14 +150,27 @@
             const blob = await camera.captureBlob(videoElement);
             const key = `capture-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-            strip.push({
+            const entry: StripFrame = {
                 key,
                 src: URL.createObjectURL(blob),
                 sequence: nextClientSequence,
                 pending: true,
-            });
+            };
 
-            uploader.enqueue(key, blob);
+            // Placed by array position rather than by renumbering the
+            // strip: the real sequences only shift once the server
+            // confirms whether it had to make room.
+            if (insertAnchor === null) {
+                strip.push(entry);
+            } else {
+                strip.splice(strip.indexOf(insertAnchor) + 1, 0, entry);
+            }
+
+            uploader.enqueue(key, blob, (): Record<string, string> =>
+                insertAfterFrameId === null
+                    ? {}
+                    : { after_frame_id: String(insertAfterFrameId) },
+            );
         } catch (error) {
             toast.error(
                 error instanceof Error ? error.message : 'Capture failed',
@@ -130,6 +178,14 @@
         } finally {
             captureInFlight = false;
         }
+    }
+
+    function toggleInsertAnchor(frame: StripFrame): void {
+        if (frame.id === undefined) {
+            return;
+        }
+
+        insertAfterFrameId = insertAfterFrameId === frame.id ? null : frame.id;
     }
 
     function toggleInterval(): void {
@@ -374,7 +430,37 @@
         {/if}
 
         <div class="phone-landscape:hidden">
-            <FrameStrip frames={strip} {aspectClass} />
+            {#if insertAnchor}
+                <div
+                    class="flex flex-wrap items-center gap-2 border-l-4 border-amber-400 bg-zinc-900 px-3 py-1.5"
+                >
+                    <span
+                        class="font-mono text-[10px] tracking-[0.25em] text-amber-400"
+                    >
+                        INSERTING AFTER FRAME {insertAnchor.sequence}
+                    </span>
+                    <button
+                        type="button"
+                        class="border border-zinc-700 px-2 py-0.5 font-mono text-[10px] tracking-[0.25em] text-zinc-300 transition-colors duration-200 hover:border-zinc-500"
+                        onclick={() => (insertAfterFrameId = null)}
+                    >
+                        SHOOT AT END
+                    </button>
+                </div>
+            {:else}
+                <p
+                    class="px-1 font-mono text-[10px] tracking-[0.25em] text-zinc-500"
+                >
+                    TAP A FRAME TO SHOOT FROM THERE
+                </p>
+            {/if}
+
+            <FrameStrip
+                frames={strip}
+                {aspectClass}
+                selectedKey={insertAnchor?.key ?? null}
+                onselect={toggleInsertAnchor}
+            />
         </div>
     </footer>
 

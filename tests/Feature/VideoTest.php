@@ -179,7 +179,8 @@ it('rejects invalid client-rendered uploads', function () {
 
     $project = Project::factory()->create();
 
-    $this->withCookie('owner_token', $project->owner_token)
+    $this->withCredentials()
+        ->withCookie('owner_token', $project->owner_token)
         ->postJson(route('projects.videos.upload', $project), [
             'video' => UploadedFile::fake()->create('render.txt', 10, 'text/plain'),
         ])

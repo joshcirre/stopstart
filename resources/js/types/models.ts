@@ -35,20 +35,27 @@ export interface Frame {
 export interface Video {
     id: number;
     status: VideoStatus;
+    /** The rate this render was actually encoded at, not the project's current fps. */
+    fps: number;
     url: string | null;
     downloadUrl: string | null;
     error: string | null;
+    createdAt: string | null;
 }
 
 export interface FrameStoreResponse {
     frame: Frame;
     frameCount: number;
+    /** True when later frames were pushed back to open the inserted slot. */
+    shifted: boolean;
 }
 
 export interface StripFrame {
     key: string;
     src: string;
     sequence: number;
+    /** Absent until the capture's upload comes back with a persisted frame. */
+    id?: number;
     pending?: boolean;
     failed?: boolean;
 }

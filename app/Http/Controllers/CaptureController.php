@@ -28,9 +28,9 @@ class CaptureController extends Controller
                 'fps' => $project->fps,
                 'remoteToken' => $project->remote_token,
             ],
-            'frames' => $project->frames()->orderByDesc('sequence')->limit(20)->get()
-                ->reverse()
-                ->values()
+            // The whole strip is sent, not just the tail: capture can be
+            // resumed from any frame, so every frame must be selectable.
+            'frames' => $project->frames()->orderBy('sequence')->get()
                 ->map(fn ($frame): array => [
                     'id' => $frame->id,
                     'sequence' => $frame->sequence,

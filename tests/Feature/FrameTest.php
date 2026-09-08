@@ -40,7 +40,8 @@ it('rejects invalid frame uploads', function (callable $file, ?string $orientati
         ? Project::factory()->portrait()->create()
         : Project::factory()->create();
 
-    $this->withCookie('owner_token', $project->owner_token)
+    $this->withCredentials()
+        ->withCookie('owner_token', $project->owner_token)
         ->postJson(route('projects.frames.store', $project), ['image' => $file()])
         ->assertUnprocessable()
         ->assertJsonValidationErrors('image');
@@ -167,4 +168,93 @@ it('cannot delete a frame through a different project', function () {
     $this->withCookie('owner_token', $frame->project->owner_token)
         ->delete(route('projects.frames.destroy', [$otherProject, $frame]))
         ->assertNotFound();
+});
+
+it('inserts a frame directly after the anchor and shifts the rest later', function () {
+    $project = Project::factory()->create();
+    $frames = collect([1, 2, 3])->map(fn (int $sequence) => Frame::factory()
+        ->for($project)
+        ->create(['sequence' => $sequence]));
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->post(route('projects.frames.store', $project), [
+            'image' => UploadedFile::fake()->image('frame.jpg', 1920, 1080),
+            'after_frame_id' => $frames[0]->id,
+        ])
+        ->assertCreated()
+        ->assertJsonPath('frame.sequence', 2)
+        ->assertJsonPath('frameCount', 4)
+        ->assertJsonPath('shifted', true);
+
+    expect($frames[0]->refresh()->sequence)->toBe(1)
+        ->and($frames[1]->refresh()->sequence)->toBe(3)
+        ->and($frames[2]->refresh()->sequence)->toBe(4)
+        ->and($project->frames()->orderBy('sequence')->pluck('sequence')->all())->toBe([1, 2, 3, 4]);
+});
+
+it('reuses an existing gap instead of shifting when inserting', function () {
+    $project = Project::factory()->create();
+    $first = Frame::factory()->for($project)->create(['sequence' => 1]);
+    $gapped = Frame::factory()->for($project)->create(['sequence' => 5]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->post(route('projects.frames.store', $project), [
+            'image' => UploadedFile::fake()->image('frame.jpg', 1920, 1080),
+            'after_frame_id' => $first->id,
+        ])
+        ->assertCreated()
+        ->assertJsonPath('frame.sequence', 2)
+        ->assertJsonPath('shifted', false);
+
+    expect($gapped->refresh()->sequence)->toBe(5);
+});
+
+it('keeps consecutive inserts in capture order', function () {
+    $project = Project::factory()->create();
+    $first = Frame::factory()->for($project)->create(['sequence' => 1]);
+    $last = Frame::factory()->for($project)->create(['sequence' => 2]);
+
+    $anchorId = $first->id;
+    $inserted = [];
+
+    foreach (range(1, 2) as $ignored) {
+        $anchorId = $this->withCookie('owner_token', $project->owner_token)
+            ->post(route('projects.frames.store', $project), [
+                'image' => UploadedFile::fake()->image('frame.jpg', 1920, 1080),
+                'after_frame_id' => $anchorId,
+            ])->assertCreated()->json('frame.id');
+
+        $inserted[] = $anchorId;
+    }
+
+    expect($project->frames()->orderBy('sequence')->pluck('id')->all())
+        ->toBe([$first->id, $inserted[0], $inserted[1], $last->id])
+        ->and($last->refresh()->sequence)->toBe(4);
+});
+
+it('appends when no anchor is given', function () {
+    $project = Project::factory()->create();
+    Frame::factory()->for($project)->create(['sequence' => 7]);
+
+    $this->withCookie('owner_token', $project->owner_token)
+        ->post(route('projects.frames.store', $project), [
+            'image' => UploadedFile::fake()->image('frame.jpg', 1920, 1080),
+        ])
+        ->assertCreated()
+        ->assertJsonPath('frame.sequence', 8)
+        ->assertJsonPath('shifted', false);
+});
+
+it('rejects an anchor frame from another project', function () {
+    $project = Project::factory()->create();
+    $foreign = Frame::factory()->create();
+
+    $this->withCredentials()
+        ->withCookie('owner_token', $project->owner_token)
+        ->postJson(route('projects.frames.store', $project), [
+            'image' => UploadedFile::fake()->image('frame.jpg', 1920, 1080),
+            'after_frame_id' => $foreign->id,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('after_frame_id');
 });

@@ -29,6 +29,8 @@ export interface ProjectShowProps {
     frames: Frame[];
     frameCount: number;
     video: Video | null;
+    /** Every silent master render, newest first. */
+    renders: Video[];
     export: Video | null;
     layerCount: number;
     dubUrl: string;
